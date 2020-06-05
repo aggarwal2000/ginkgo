@@ -24,6 +24,7 @@ set(EXAMPLES_LIST
     ginkgo-overhead
     heat-equation
     minimal-cuda-solver
+    multigrid-preconditioned-solver
     papi-logging
     par-ilu-convergence
     performance-debugging
