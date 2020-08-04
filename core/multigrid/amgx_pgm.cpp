@@ -175,15 +175,15 @@ void AmgxPgm<ValueType, IndexType>::generate()
 
     // agg_.set_executor(exec);
     // intermediate_agg.set_executor(exec);
-    auto amgx_pgm_host = matrix_type::create(host);
-    amgx_pgm_host->copy_from(amgxpgm_op);
-    agg_.set_executor(host);
+    // auto amgx_pgm_host = matrix_type::create(host);
+    // amgx_pgm_host->copy_from(amgxpgm_op);
+    // agg_.set_executor(host);
     // Construct the coarse matrix
-    auto coarse =
-        share(amgx_pgm_generate(host, amgx_pgm_host.get(), num_agg, agg_));
-    auto coarse_matrix = share(matrix_type::create(exec));
-    coarse_matrix->copy_from(coarse.get());
-    agg_.set_executor(exec);
+    auto coarse_matrix =
+        share(amgx_pgm_generate(exec, amgxpgm_op, num_agg, agg_));
+    // auto coarse_matrix = share(matrix_type::create(exec));
+    // coarse_matrix->copy_from(coarse.get());
+    // agg_.set_executor(exec);
     auto coarse_dim = coarse_matrix->get_size()[0];
     auto fine_dim = system_matrix_->get_size()[0];
 
