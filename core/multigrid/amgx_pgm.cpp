@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ginkgo/core/matrix/csr.hpp>
 #include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/identity.hpp>
-
+#include <iostream>
 
 #include "core/components/fill_array.hpp"
 #include "core/matrix/csr_builder.hpp"
@@ -130,13 +130,24 @@ void AmgxPgm<ValueType, IndexType>::generate()
                    lend(weight_mtx));
     // Extract the diagonal value of matrix
     auto diag = weight_mtx->extract_diagonal();
+    auto host = exec->get_master();
+    // auto weight_mtx_host = weight_matrix_type::create(host);
+    // auto diag_host = matrix::Dense<rmc_value_type>::create(host);
+    // weight_mtx_host->copy_from(weight_mtx.get());
+    // diag_host->copy_from(diag.get());
+    // strongest_neighbor.set_executor(host);
     for (int i = 0; i < parameters_.max_iterations; i++) {
         // Find the strongest neighbor of each row
+        // host->run(amgx_pgm::make_find_strongest_neighbor(
+        //     weight_mtx_host.get(), diag_host.get(), agg_,
+        //     strongest_neighbor));
         exec->run(amgx_pgm::make_find_strongest_neighbor(
             weight_mtx.get(), diag.get(), agg_, strongest_neighbor));
         // Match edges
+        // host->run(amgx_pgm::make_match_edge(strongest_neighbor, agg_));
         exec->run(amgx_pgm::make_match_edge(strongest_neighbor, agg_));
         // Get the num_unagg
+        // host->run(amgx_pgm::make_count_unagg(agg_, &num_unagg));
         exec->run(amgx_pgm::make_count_unagg(agg_, &num_unagg));
         // no new match, all match, or the ratio of num_unagg/num is lower
         // than parameter.max_unassigned_ratio
@@ -146,6 +157,9 @@ void AmgxPgm<ValueType, IndexType>::generate()
         }
         num_unagg_prev = num_unagg;
     }
+    // agg_.set_executor(exec);
+    // strongest_neighbor.set_executor(exec);
+    std::cout << "num_unagg: " << num_unagg << std::endl;
     // Handle the left unassign points
     if (num_unagg != 0 && parameters_.deterministic) {
         // copy the agg to intermediate_agg
@@ -155,13 +169,21 @@ void AmgxPgm<ValueType, IndexType>::generate()
     exec->run(amgx_pgm::make_assign_to_exist_agg(weight_mtx.get(), diag.get(),
                                                  agg_, intermediate_agg));
     IndexType num_agg = 0;
+
     // Renumber the index
     exec->run(amgx_pgm::make_renumber(agg_, &num_agg));
 
+    // agg_.set_executor(exec);
+    // intermediate_agg.set_executor(exec);
+    auto amgx_pgm_host = matrix_type::create(host);
+    amgx_pgm_host->copy_from(amgxpgm_op);
+    agg_.set_executor(host);
     // Construct the coarse matrix
-    auto coarse_matrix =
-        share(amgx_pgm_generate(exec, amgxpgm_op, num_agg, agg_));
-    // this->set_multigrid_level(system_matrix_, coarse_matrix);
+    auto coarse =
+        share(amgx_pgm_generate(host, amgx_pgm_host.get(), num_agg, agg_));
+    auto coarse_matrix = share(matrix_type::create(exec));
+    coarse_matrix->copy_from(coarse.get());
+    agg_.set_executor(exec);
     auto coarse_dim = coarse_matrix->get_size()[0];
     auto fine_dim = system_matrix_->get_size()[0];
 
