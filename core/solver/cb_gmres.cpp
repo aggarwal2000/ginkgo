@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "core/base/extended_float.hpp"
+#include "core/base/precision_dispatch.hpp"
 #include "core/solver/cb_gmres_accessor.hpp"
 #include "core/solver/cb_gmres_kernels.hpp"
 
@@ -207,8 +208,10 @@ void CbGmres<ValueType>::apply_impl(const LinOp *b, LinOp *x) const
         auto one_op = initialize<Vector>({one<ValueType>()}, exec);
         auto neg_one_op = initialize<Vector>({-one<ValueType>()}, exec);
 
-        auto dense_b = as<const Vector>(b);
-        auto dense_x = as<Vector>(x);
+        auto converted_b = make_temporary_conversion<ValueType>(b);
+        auto converted_x = make_temporary_conversion<ValueType>(x);
+        auto dense_b = converted_b.get();
+        auto dense_x = converted_x.get();
         auto residual = Vector::create_with_config_of(dense_b);
         /* The dimensions {x, y, z} explained for the krylov_bases:
          * - x: selects the krylov vector (which has krylov_dim + 1 vectors)
@@ -493,15 +496,16 @@ void CbGmres<ValueType>::apply_impl(const LinOp *b, LinOp *x) const
 
 template <typename ValueType>
 void CbGmres<ValueType>::apply_impl(const LinOp *alpha, const LinOp *b,
-                                    const LinOp *residual_norm_collection,
-                                    LinOp *x) const
+                                    const LinOp *beta, LinOp *x) const
 {
-    auto dense_x = as<matrix::Dense<ValueType>>(x);
-
-    auto x_clone = dense_x->clone();
-    this->apply(b, x_clone.get());
-    dense_x->scale(residual_norm_collection);
-    dense_x->add_scaled(alpha, x_clone.get());
+    precision_dispatch_spmv<ValueType>(
+        [&](auto dense_alpha, auto dense_b, auto dense_beta, auto dense_x) {
+            auto x_clone = dense_x->clone();
+            this->apply(dense_b, x_clone.get());
+            dense_x->scale(dense_beta);
+            dense_x->add_scaled(dense_alpha, x_clone.get());
+        },
+        alpha, b, beta, x);
 }
 
 #define GKO_DECLARE_CB_GMRES(_type1) class CbGmres<_type1>
