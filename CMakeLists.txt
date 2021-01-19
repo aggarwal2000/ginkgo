@@ -31,6 +31,7 @@ option(GINKGO_BUILD_DPCPP
     "Compile DPC++ kernels for Intel GPUs or other DPC++ enabled hardware" ${GINKGO_HAS_DPCPP})
 option(GINKGO_BUILD_CUDA "Compile kernels for NVIDIA GPUs" ${GINKGO_HAS_CUDA})
 option(GINKGO_BUILD_HIP "Compile kernels for AMD or NVIDIA GPUs" ${GINKGO_HAS_HIP})
+option(GINKGO_BUILD_MPI "Compile the MPI module" ${GINKGO_HAS_MPI})
 option(GINKGO_BUILD_DOC "Generate documentation" OFF)
 option(GINKGO_SKIP_DEPENDENCY_UPDATE
     "Do not update dependencies each time the project is rebuilt" ON)
@@ -74,6 +75,10 @@ set(GINKGO_HIP_AMDGPU "" CACHE STRING
 option(GINKGO_JACOBI_FULL_OPTIMIZATIONS "Use all the optimizations for the CUDA Jacobi algorithm" OFF)
 option(BUILD_SHARED_LIBS "Build shared (.so, .dylib, .dll) libraries" ON)
 option(GINKGO_BUILD_HWLOC "Build Ginkgo with HWLOC. Default is ON. If a system HWLOC is not found, then we try to build it ourselves. Switch this OFF to disable HWLOC." ON)
+option(MPI_RUN_AS_ROOT "Allow MPI to run as root user, necessary within docker containers, not recommended otherwise" OFF)
+set(GINKGO_FORCE_CUDA_AWARE_MPI "" CACHE STRING
+    "Assert that the MPI library is cuda aware. This forces CUDA aware implementation (YES or NO), but may fail
+     catastrophically in case the MPI implementation is not CUDA Aware, and cuda aware functionality has been forced" )
 
 set(GINKGO_CIRCULAR_DEPS_FLAGS "-Wl,--no-undefined")
 
@@ -168,6 +173,33 @@ if(MSVC OR WIN32 OR CYGWIN OR APPLE)
     set(GINKGO_HAVE_HWLOC 0)
 endif()
 
+set(GINKGO_HAVE_MPI 0)
+set(GINKGO_HAVE_CUDA_AWARE_MPI 0)
+if(GINKGO_BUILD_MPI)
+    find_package(MPI REQUIRED)
+    set(GINKGO_HAVE_MPI 1)
+    if(GINKGO_BUILD_CUDA AND (${GINKGO_FORCE_CUDA_AWARE_MPI} MATCHES "") )
+        enable_language(CUDA)
+        try_run(GKO_CUDA_AWARE_RUN_STATUS GKO_CUDA_AWARE_COMPILE_STATUS
+            "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/mpi/test/cuda-aware-mpi-test.cu"
+            COMPILE_DEFINITIONS ""
+            LINK_LIBRARIES MPI::MPI_C
+            RUN_OUTPUT_VARIABLE GKO_CUDA_AWARE_RUN_OUT
+            COMPILE_OUTPUT_VARIABLE GKO_CUDA_AWARE_COMPILE_OUT)
+        if( ${GKO_CUDA_AWARE_RUN_STATUS} MATCHES "FAILED_TO_RUN" )
+            message(STATUS "MPI does not support CUDA, disabling CUDA-Aware features, everything will be staged through the host.")
+        else()
+            message(STATUS "MPI supports CUDA, enabling CUDA-Aware features")
+            set(GINKGO_HAVE_CUDA_AWARE_MPI 1)
+        endif()
+    endif()
+    if( ${GINKGO_FORCE_CUDA_AWARE_MPI} MATCHES "YES" )
+        set(GINKGO_HAVE_CUDA_AWARE_MPI 1)
+    elseif( ${GINKGO_FORCE_CUDA_AWARE_MPI} MATCHES "NO" )
+        set(GINKGO_HAVE_CUDA_AWARE_MPI 0)
+    endif()
+endif()
+
 set(GINKGO_HIP_PLATFORM_NVCC 0)
 set(GINKGO_HIP_PLATFORM_HCC 0)
 
@@ -242,6 +274,9 @@ if (GINKGO_BUILD_OMP)
 endif()
 if (GINKGO_BUILD_DPCPP)
     add_subdirectory(dpcpp)        # High-performance DPC++ kernels
+endif()
+if(GINKGO_BUILD_MPI)
+    add_subdirectory(mpi)        # The MPI module
 endif()
 # HIP needs to be last because it builds the GINKGO_RPATH_FOR_HIP variable
 # which needs to know the `ginkgo` target.
