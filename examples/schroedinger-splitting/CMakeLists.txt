@@ -1,4 +1,4 @@
-set(target_name "heat-equation")
+set(target_name "schroedinger-splitting")
 find_package(OpenCV)
 
 if (OpenCV_FOUND)
@@ -8,5 +8,5 @@ if (OpenCV_FOUND)
     configure_file(../../matrices/examples/gko_logo_2d.mtx data/gko_logo_2d.mtx COPYONLY)
     configure_file(../../matrices/examples/gko_text_2d.mtx data/gko_text_2d.mtx COPYONLY)
 else()
-    message("OpenCV not found, skipping heat-equation example")
+    message("OpenCV not found, skipping schroedinger-splitting example")
 endif()
