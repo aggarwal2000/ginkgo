@@ -20,6 +20,14 @@ if(NOT DEFINED HIPBLAS_PATH)
     endif()
 endif()
 
+if(NOT DEFINED HIPFFT_PATH)
+    if(DEFINED ENV{HIPFFT_PATH})
+        set(HIPFFT_PATH $ENV{HIPFFT_PATH} CACHE PATH "Path to which HIPFFT has been installed")
+    else()
+        set(HIPFFT_PATH "${ROCM_PATH}/hipfft" CACHE PATH "Path to which HIPFFT has been installed")
+    endif()
+endif()
+
 if(NOT DEFINED HIPRAND_PATH)
     if(DEFINED ENV{HIPRAND_PATH})
         set(HIPRAND_PATH $ENV{HIPRAND_PATH} CACHE PATH "Path to which HIPRAND has been installed")
@@ -136,6 +144,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${HIP_PATH}/cmake")
 list(APPEND CMAKE_PREFIX_PATH
     "${HIPBLAS_PATH}/lib/cmake"
+    "${HIPFFT_PATH}/lib/cmake"
     "${HIPRAND_PATH}/lib/cmake"
     "${HIPSPARSE_PATH}/lib/cmake"
     "${ROCRAND_PATH}/lib/cmake"
@@ -153,6 +162,7 @@ set(HIP_HIPCC_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" CACHE STR
 
 find_package(HIP REQUIRED)
 find_package(hipblas REQUIRED)
+find_package(hipfft REQUIRED)
 find_package(hiprand REQUIRED)
 find_package(hipsparse REQUIRED)
 # At the moment, for hiprand to work also rocrand is required.
@@ -301,7 +311,7 @@ elseif(GINKGO_HIP_PLATFORM MATCHES "nvcc")
     set(HIP_CUDA_LIBRARIES ${CUDA_LIBRARIES} PARENT_SCOPE)
 endif()
 
-target_link_libraries(ginkgo_hip PRIVATE roc::hipblas roc::hipsparse hip::hiprand roc::rocrand)
+target_link_libraries(ginkgo_hip PRIVATE roc::hipblas roc::hipsparse hip::hipfft hip::hiprand roc::rocrand)
 
 target_link_libraries(ginkgo_hip PUBLIC ginkgo_core_device)
 
@@ -311,6 +321,7 @@ target_include_directories(ginkgo_hip
     PRIVATE
         ${GINKGO_HIP_THRUST_PATH}
         ${HIPBLAS_INCLUDE_DIRS}
+	${HIPFFT_INCLUDE_DIRS}
         ${hiprand_INCLUDE_DIRS}
         ${HIPSPARSE_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${ROCPRIM_INCLUDE_DIRS}>)
