@@ -536,7 +536,7 @@ public:
      *
      * @return a pointer to the new column permuted object
      */
-    virtual std::unique_ptr<LinOp> column_permute(
+    virtual std::unique_ptr<BatchLinOp> column_permute(
         std::vector<const Array<IndexType> *> permutation_indices) const = 0;
 
     /**
