@@ -48,11 +48,13 @@ target_sources(ginkgo_dpcpp
 
 ginkgo_compile_features(ginkgo_dpcpp)
 
-set(GINKGO_DPCPP_FLAGS ${GINKGO_COMPILER_FLAGS} -fsycl -fsycl-device-lib=libc)
+set(GINKGO_DPCPP_FLAGS ${GINKGO_COMPILER_FLAGS} -fsycl)
 set(GINKGO_DPCPP_FLAGS ${GINKGO_DPCPP_FLAGS} PARENT_SCOPE)
 target_compile_options(ginkgo_dpcpp PRIVATE "${GINKGO_DPCPP_FLAGS}")
 target_compile_features(ginkgo_dpcpp PRIVATE cxx_std_17)
+target_link_libraries(ginkgo_dpcpp PRIVATE "mkl_sycl;mkl_intel_ilp64;mkl_sequential;mkl_core")
 target_link_libraries(ginkgo_dpcpp PUBLIC ginkgo_core_device)
+target_link_options(ginkgo_dpcpp PRIVATE -fsycl-device-lib=all)
 
 ginkgo_default_includes(ginkgo_dpcpp)
 ginkgo_install_library(ginkgo_dpcpp dpcpp)
