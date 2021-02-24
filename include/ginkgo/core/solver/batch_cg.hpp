@@ -38,12 +38,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <ginkgo/core/base/array.hpp>
+#include <ginkgo/core/base/batch_lin_op.hpp>
 #include <ginkgo/core/base/exception_helpers.hpp>
-#include <ginkgo/core/base/lin_op.hpp>
 #include <ginkgo/core/base/math.hpp>
 #include <ginkgo/core/base/types.hpp>
 #include <ginkgo/core/log/logger.hpp>
-#include <ginkgo/core/matrix/identity.hpp>
+#include <ginkgo/core/matrix/batch_identity.hpp>
 #include <ginkgo/core/stop/combined.hpp>
 #include <ginkgo/core/stop/criterion.hpp>
 
@@ -69,11 +69,11 @@ namespace solver {
  * @ingroup LinOp
  */
 template <typename ValueType = default_precision>
-class BatchCg : public EnableLinOp<BatchCg<ValueType>>,
-                public Preconditionable,
-                public Transposable {
-    friend class EnableLinOp<BatchCg>;
-    friend class EnablePolymorphicObject<BatchCg, LinOp>;
+class BatchCg : public EnableBatchLinOp<BatchCg<ValueType>>,
+                public BatchPreconditionable,
+                public BatchTransposable {
+    friend class EnableBatchLinOp<BatchCg>;
+    friend class EnablePolymorphicObject<BatchCg, BatchLinOp>;
 
 public:
     using value_type = ValueType;
@@ -84,14 +84,14 @@ public:
      *
      * @return the system operator (matrix)
      */
-    std::shared_ptr<const LinOp> get_system_matrix() const
+    std::shared_ptr<const BatchLinOp> get_system_matrix() const
     {
         return system_matrix_;
     }
 
-    std::unique_ptr<LinOp> transpose() const override;
+    std::unique_ptr<BatchLinOp> transpose() const override;
 
-    std::unique_ptr<LinOp> conj_transpose() const override;
+    std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
     /**
      * Return true as iterative solvers use the data in x as an initial guess.
@@ -133,54 +133,57 @@ public:
         /**
          * Preconditioner factory.
          */
-        std::shared_ptr<const LinOpFactory> GKO_FACTORY_PARAMETER_SCALAR(
+        std::shared_ptr<const BatchLinOpFactory> GKO_FACTORY_PARAMETER_SCALAR(
             preconditioner, nullptr);
 
         /**
          * Already generated preconditioner. If one is provided, the factory
          * `preconditioner` will be ignored.
          */
-        std::shared_ptr<const LinOp> GKO_FACTORY_PARAMETER_SCALAR(
+        std::shared_ptr<const BatchLinOp> GKO_FACTORY_PARAMETER_SCALAR(
             generated_preconditioner, nullptr);
     };
-    GKO_ENABLE_LIN_OP_FACTORY(BatchCg, parameters, Factory);
+    GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchCg, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
 
 protected:
-    void apply_impl(const LinOp *b, LinOp *x) const override;
+    void apply_impl(const BatchLinOp *b, BatchLinOp *x) const override;
 
-    void apply_impl(const LinOp *alpha, const LinOp *b, const LinOp *beta,
-                    LinOp *x) const override;
+    void apply_impl(const BatchLinOp *alpha, const BatchLinOp *b,
+                    const BatchLinOp *beta, BatchLinOp *x) const override;
 
     explicit BatchCg(std::shared_ptr<const Executor> exec)
-        : EnableLinOp<BatchCg>(std::move(exec))
+        : EnableBatchLinOp<BatchCg>(std::move(exec))
     {}
 
     explicit BatchCg(const Factory *factory,
-                     std::shared_ptr<const LinOp> system_matrix)
-        : EnableLinOp<BatchCg>(factory->get_executor(),
-                               gko::transpose(system_matrix->get_size())),
+                     std::shared_ptr<const BatchLinOp> system_matrix)
+        : EnableBatchLinOp<BatchCg>(
+              factory->get_executor(),
+              gko::batch_transpose(system_matrix->get_sizes())),
           parameters_{factory->get_parameters()},
           system_matrix_{std::move(system_matrix)}
     {
-        GKO_ASSERT_IS_SQUARE_MATRIX(system_matrix_);
+        GKO_ASSERT_IS_BATCH_SQUARE_MATRIX(system_matrix_);
         if (parameters_.generated_preconditioner) {
-            GKO_ASSERT_EQUAL_DIMENSIONS(parameters_.generated_preconditioner,
-                                        this);
+            GKO_ASSERT_BATCH_EQUAL_DIMENSIONS(
+                parameters_.generated_preconditioner, this);
             set_preconditioner(parameters_.generated_preconditioner);
         } else if (parameters_.preconditioner) {
             set_preconditioner(
                 parameters_.preconditioner->generate(system_matrix_));
         } else {
-            set_preconditioner(matrix::Identity<ValueType>::create(
-                this->get_executor(), this->get_size()));
+            set_preconditioner(matrix::BatchIdentity<ValueType>::create(
+                this->get_executor(), this->get_num_batches(),
+                this->get_sizes().size() ? this->get_sizes()[0]
+                                         : gko::dim<2>{}));
         }
         stop_criterion_factory_ =
             stop::combine(std::move(parameters_.criteria));
     }
 
 private:
-    std::shared_ptr<const LinOp> system_matrix_{};
+    std::shared_ptr<const BatchLinOp> system_matrix_{};
     std::shared_ptr<const stop::CriterionFactory> stop_criterion_factory_{};
 };
 

@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <ginkgo/core/base/executor.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/batch_dense.hpp>
 #include <ginkgo/core/stop/combined.hpp>
 #include <ginkgo/core/stop/iteration.hpp>
 #include <ginkgo/core/stop/residual_norm.hpp>
@@ -56,13 +56,15 @@ template <typename T>
 class BatchCg : public ::testing::Test {
 protected:
     using value_type = T;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::BatchDense<value_type>;
     using Solver = gko::solver::BatchCg<value_type>;
 
     BatchCg()
         : exec(gko::ReferenceExecutor::create()),
-          mtx(gko::initialize<Mtx>(
-              {{2, -1.0, 0.0}, {-1.0, 2, -1.0}, {0.0, -1.0, 2}}, exec)),
+          mtx(gko::batch_initialize<Mtx>(
+              {{{2, -1.0, 0.0}, {-1.0, 2, -1.0}, {0.0, -1.0, 2}},
+               {{4, -1.0, 0.0}, {-1.0, 4, -1.0}, {0.0, -1.0, 4}}},
+              exec)),
           batch_cg_factory(
               Solver::build()
                   .with_criteria(
@@ -77,15 +79,18 @@ protected:
     std::shared_ptr<const gko::Executor> exec;
     std::shared_ptr<Mtx> mtx;
     std::unique_ptr<typename Solver::Factory> batch_cg_factory;
-    std::unique_ptr<gko::LinOp> solver;
+    std::unique_ptr<gko::BatchLinOp> solver;
 
     static void assert_same_matrices(const Mtx *m1, const Mtx *m2)
     {
-        ASSERT_EQ(m1->get_size()[0], m2->get_size()[0]);
-        ASSERT_EQ(m1->get_size()[1], m2->get_size()[1]);
-        for (gko::size_type i = 0; i < m1->get_size()[0]; ++i) {
-            for (gko::size_type j = 0; j < m2->get_size()[1]; ++j) {
-                EXPECT_EQ(m1->at(i, j), m2->at(i, j));
+        ASSERT_EQ(m1->get_num_batches(), m2->get_num_batches());
+        for (gko::size_type b = 0; b < m1->get_num_batches(); ++b) {
+            ASSERT_EQ(m1->get_sizes()[b][0], m2->get_sizes()[b][0]);
+            ASSERT_EQ(m1->get_sizes()[b][1], m2->get_sizes()[b][1]);
+            for (gko::size_type i = 0; i < m1->get_sizes()[b][0]; ++i) {
+                for (gko::size_type j = 0; j < m2->get_sizes()[b][1]; ++j) {
+                    EXPECT_EQ(m1->at(b, i, j), m2->at(b, i, j));
+                }
             }
         }
     }
@@ -95,249 +100,202 @@ TYPED_TEST_SUITE(BatchCg, gko::test::ValueTypes);
 
 
 TYPED_TEST(BatchCg, BatchCgFactoryKnowsItsExecutor)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    ASSERT_EQ(this->batch_cg_factory->get_executor(), this->exec);
-//}
+{
+    ASSERT_EQ(this->batch_cg_factory->get_executor(), this->exec);
+}
 
 
 TYPED_TEST(BatchCg, BatchCgFactoryCreatesCorrectSolver)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Solver = typename TestFixture::Solver;
-//
-//    ASSERT_EQ(this->solver->get_size(), gko::dim<2>(3, 3));
-//    auto batch_cg_solver = static_cast<Solver *>(this->solver.get());
-//    ASSERT_NE(batch_cg_solver->get_system_matrix(), nullptr);
-//    ASSERT_EQ(batch_cg_solver->get_system_matrix(), this->mtx);
-//}
+{
+    using Solver = typename TestFixture::Solver;
+
+    ASSERT_EQ(this->solver->get_sizes()[0], gko::dim<2>(3, 3));
+    ASSERT_EQ(this->solver->get_sizes()[1], gko::dim<2>(3, 3));
+    auto batch_cg_solver = static_cast<Solver *>(this->solver.get());
+    ASSERT_NE(batch_cg_solver->get_system_matrix(), nullptr);
+    ASSERT_EQ(batch_cg_solver->get_system_matrix(), this->mtx);
+}
 
 
 TYPED_TEST(BatchCg, CanBeCopied)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Mtx = typename TestFixture::Mtx;
-//    using Solver = typename TestFixture::Solver;
-//    auto copy = this->batch_cg_factory->generate(Mtx::create(this->exec));
-//
-//    copy->copy_from(this->solver.get());
-//
-//    ASSERT_EQ(copy->get_size(), gko::dim<2>(3, 3));
-//    auto copy_mtx = static_cast<Solver *>(copy.get())->get_system_matrix();
-//    this->assert_same_matrices(static_cast<const Mtx *>(copy_mtx.get()),
-//                               this->mtx.get());
-//}
+{
+    using Mtx = typename TestFixture::Mtx;
+    using Solver = typename TestFixture::Solver;
+    auto copy = this->batch_cg_factory->generate(Mtx::create(this->exec));
+
+    copy->copy_from(this->solver.get());
+
+    ASSERT_EQ(copy->get_sizes()[0], gko::dim<2>(3, 3));
+    ASSERT_EQ(copy->get_sizes()[0], gko::dim<2>(3, 3));
+    auto copy_mtx = static_cast<Solver *>(copy.get())->get_system_matrix();
+    this->assert_same_matrices(static_cast<const Mtx *>(copy_mtx.get()),
+                               this->mtx.get());
+}
 
 
 TYPED_TEST(BatchCg, CanBeMoved)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Mtx = typename TestFixture::Mtx;
-//    using Solver = typename TestFixture::Solver;
-//    auto copy = this->batch_cg_factory->generate(Mtx::create(this->exec));
-//
-//    copy->copy_from(std::move(this->solver));
-//
-//    ASSERT_EQ(copy->get_size(), gko::dim<2>(3, 3));
-//    auto copy_mtx = static_cast<Solver *>(copy.get())->get_system_matrix();
-//    this->assert_same_matrices(static_cast<const Mtx *>(copy_mtx.get()),
-//                               this->mtx.get());
-//}
+{
+    using Mtx = typename TestFixture::Mtx;
+    using Solver = typename TestFixture::Solver;
+    auto copy = this->batch_cg_factory->generate(Mtx::create(this->exec));
+
+    copy->copy_from(std::move(this->solver));
+
+    ASSERT_EQ(copy->get_sizes()[0], gko::dim<2>(3, 3));
+    ASSERT_EQ(copy->get_sizes()[0], gko::dim<2>(3, 3));
+    auto copy_mtx = static_cast<Solver *>(copy.get())->get_system_matrix();
+    this->assert_same_matrices(static_cast<const Mtx *>(copy_mtx.get()),
+                               this->mtx.get());
+}
 
 
 TYPED_TEST(BatchCg, CanBeCloned)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Mtx = typename TestFixture::Mtx;
-//    using Solver = typename TestFixture::Solver;
-//    auto clone = this->solver->clone();
-//
-//    ASSERT_EQ(clone->get_size(), gko::dim<2>(3, 3));
-//    auto clone_mtx = static_cast<Solver *>(clone.get())->get_system_matrix();
-//    this->assert_same_matrices(static_cast<const Mtx *>(clone_mtx.get()),
-//                               this->mtx.get());
-//}
+{
+    using Mtx = typename TestFixture::Mtx;
+    using Solver = typename TestFixture::Solver;
+    auto clone = this->solver->clone();
+
+    ASSERT_EQ(clone->get_sizes()[0], gko::dim<2>(3, 3));
+    ASSERT_EQ(clone->get_sizes()[0], gko::dim<2>(3, 3));
+    auto clone_mtx = static_cast<Solver *>(clone.get())->get_system_matrix();
+    this->assert_same_matrices(static_cast<const Mtx *>(clone_mtx.get()),
+                               this->mtx.get());
+}
 
 
 TYPED_TEST(BatchCg, CanBeCleared)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Solver = typename TestFixture::Solver;
-//    this->solver->clear();
-//
-//    ASSERT_EQ(this->solver->get_size(), gko::dim<2>(0, 0));
-//    auto solver_mtx =
-//        static_cast<Solver *>(this->solver.get())->get_system_matrix();
-//    ASSERT_EQ(solver_mtx, nullptr);
-//}
+{
+    using Solver = typename TestFixture::Solver;
+    this->solver->clear();
+
+    ASSERT_EQ(this->solver->get_sizes().size(), 0);
+    auto solver_mtx =
+        static_cast<Solver *>(this->solver.get())->get_system_matrix();
+    ASSERT_EQ(solver_mtx, nullptr);
+}
 
 
 TYPED_TEST(BatchCg, ApplyUsesInitialGuessReturnsTrue)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    ASSERT_TRUE(this->solver->apply_uses_initial_guess());
-//}
+{
+    ASSERT_TRUE(this->solver->apply_uses_initial_guess());
+}
 
 
 TYPED_TEST(BatchCg, CanSetPreconditionerGenerator)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Solver = typename TestFixture::Solver;
-//    using value_type = typename TestFixture::value_type;
-//    auto batch_cg_factory =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec),
-//                gko::stop::ResidualNorm<value_type>::build()
-//                    .with_reduction_factor(
-//                        gko::remove_complex<value_type>(1e-6))
-//                    .on(this->exec))
-//            .with_preconditioner(
-//                Solver::build()
-//                    .with_criteria(
-//                        gko::stop::Iteration::build().with_max_iters(3u).on(
-//                            this->exec))
-//                    .on(this->exec))
-//            .on(this->exec);
-//    auto solver = batch_cg_factory->generate(this->mtx);
-//    auto precond = dynamic_cast<const gko::solver::BatchCg<value_type> *>(
-//        static_cast<gko::solver::BatchCg<value_type> *>(solver.get())
-//            ->get_preconditioner()
-//            .get());
-//
-//    ASSERT_NE(precond, nullptr);
-//    ASSERT_EQ(precond->get_size(), gko::dim<2>(3, 3));
-//    ASSERT_EQ(precond->get_system_matrix(), this->mtx);
-//}
+{
+    using Solver = typename TestFixture::Solver;
+    using value_type = typename TestFixture::value_type;
+    auto batch_cg_factory =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec),
+                gko::stop::ResidualNorm<value_type>::build()
+                    .with_reduction_factor(
+                        gko::remove_complex<value_type>(1e-6))
+                    .on(this->exec))
+            .with_preconditioner(
+                Solver::build()
+                    .with_criteria(
+                        gko::stop::Iteration::build().with_max_iters(3u).on(
+                            this->exec))
+                    .on(this->exec))
+            .on(this->exec);
+    auto solver = batch_cg_factory->generate(this->mtx);
+    auto precond = dynamic_cast<const gko::solver::BatchCg<value_type> *>(
+        static_cast<gko::solver::BatchCg<value_type> *>(solver.get())
+            ->get_preconditioner()
+            .get());
+
+    ASSERT_NE(precond, nullptr);
+    ASSERT_EQ(precond->get_sizes()[0], gko::dim<2>(3, 3));
+    ASSERT_EQ(precond->get_sizes()[1], gko::dim<2>(3, 3));
+    ASSERT_EQ(precond->get_system_matrix(), this->mtx);
+}
 
 
 TYPED_TEST(BatchCg, CanSetPreconditionerInFactory)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Solver = typename TestFixture::Solver;
-//    std::shared_ptr<Solver> batch_cg_precond =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
-//            .on(this->exec)
-//            ->generate(this->mtx);
-//
-//    auto batch_cg_factory =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
-//            .with_generated_preconditioner(batch_cg_precond)
-//            .on(this->exec);
-//    auto solver = batch_cg_factory->generate(this->mtx);
-//    auto precond = solver->get_preconditioner();
-//
-//    ASSERT_NE(precond.get(), nullptr);
-//    ASSERT_EQ(precond.get(), batch_cg_precond.get());
-//}
+{
+    using Solver = typename TestFixture::Solver;
+    std::shared_ptr<Solver> batch_cg_precond =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
+            .on(this->exec)
+            ->generate(this->mtx);
 
+    auto batch_cg_factory =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
+            .with_generated_preconditioner(batch_cg_precond)
+            .on(this->exec);
+    auto solver = batch_cg_factory->generate(this->mtx);
+    auto precond = solver->get_preconditioner();
 
-TYPED_TEST(BatchCg, CanSetCriteriaAgain)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Solver = typename TestFixture::Solver;
-//    std::shared_ptr<gko::stop::CriterionFactory> init_crit =
-//        gko::stop::Iteration::build().with_max_iters(3u).on(this->exec);
-//    auto batch_cg_factory =
-//    Solver::build().with_criteria(init_crit).on(this->exec);
-//
-//    ASSERT_EQ((batch_cg_factory->get_parameters().criteria).back(),
-//    init_crit);
-//
-//    auto solver = batch_cg_factory->generate(this->mtx);
-//    std::shared_ptr<gko::stop::CriterionFactory> new_crit =
-//        gko::stop::Iteration::build().with_max_iters(5u).on(this->exec);
-//
-//    solver->set_stop_criterion_factory(new_crit);
-//    auto new_crit_fac = solver->get_stop_criterion_factory();
-//    auto niter =
-//        static_cast<const gko::stop::Iteration::Factory *>(new_crit_fac.get())
-//            ->get_parameters()
-//            .max_iters;
-//
-//    ASSERT_EQ(niter, 5);
-//}
+    ASSERT_NE(precond.get(), nullptr);
+    ASSERT_EQ(precond.get(), batch_cg_precond.get());
+}
 
 
 TYPED_TEST(BatchCg, ThrowsOnWrongPreconditionerInFactory)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Mtx = typename TestFixture::Mtx;
-//    using Solver = typename TestFixture::Solver;
-//    std::shared_ptr<Mtx> wrong_sized_mtx =
-//        Mtx::create(this->exec, gko::dim<2>{2, 2});
-//    std::shared_ptr<Solver> batch_cg_precond =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
-//            .on(this->exec)
-//            ->generate(wrong_sized_mtx);
-//
-//    auto batch_cg_factory =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
-//            .with_generated_preconditioner(batch_cg_precond)
-//            .on(this->exec);
-//
-//    ASSERT_THROW(batch_cg_factory->generate(this->mtx),
-//    gko::DimensionMismatch);
-//}
+{
+    using Mtx = typename TestFixture::Mtx;
+    using Solver = typename TestFixture::Solver;
+    std::shared_ptr<Mtx> wrong_sized_mtx = Mtx::create(
+        this->exec,
+        std::vector<gko::dim<2>>{gko::dim<2>{2, 2}, gko::dim<2>{2, 2}});
+    std::shared_ptr<Solver> batch_cg_precond =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
+            .on(this->exec)
+            ->generate(wrong_sized_mtx);
+
+    auto batch_cg_factory =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
+            .with_generated_preconditioner(batch_cg_precond)
+            .on(this->exec);
+
+    ASSERT_THROW(batch_cg_factory->generate(this->mtx), gko::DimensionMismatch);
+}
 
 
 TYPED_TEST(BatchCg, ThrowsOnRectangularMatrixInFactory)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Mtx = typename TestFixture::Mtx;
-//    using Solver = typename TestFixture::Solver;
-//    std::shared_ptr<Mtx> rectangular_mtx =
-//        Mtx::create(this->exec, gko::dim<2>{1, 2});
-//
-//    ASSERT_THROW(this->batch_cg_factory->generate(rectangular_mtx),
-//                 gko::DimensionMismatch);
-//}
+{
+    using Mtx = typename TestFixture::Mtx;
+    using Solver = typename TestFixture::Solver;
+    std::shared_ptr<Mtx> rectangular_mtx =
+        Mtx::create(this->exec, std::vector<gko::dim<2>>(2, gko::dim<2>{1, 2}));
+
+    ASSERT_THROW(this->batch_cg_factory->generate(rectangular_mtx),
+                 gko::DimensionMismatch);
+}
 
 
 TYPED_TEST(BatchCg, CanSetPreconditioner)
-GKO_NOT_IMPLEMENTED;
-//{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
-//    using Solver = typename TestFixture::Solver;
-//    std::shared_ptr<Solver> batch_cg_precond =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
-//            .on(this->exec)
-//            ->generate(this->mtx);
-//
-//    auto batch_cg_factory =
-//        Solver::build()
-//            .with_criteria(
-//                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
-//            .on(this->exec);
-//    auto solver = batch_cg_factory->generate(this->mtx);
-//    solver->set_preconditioner(batch_cg_precond);
-//    auto precond = solver->get_preconditioner();
-//
-//    ASSERT_NE(precond.get(), nullptr);
-//    ASSERT_EQ(precond.get(), batch_cg_precond.get());
-//}
+{
+    using Solver = typename TestFixture::Solver;
+    std::shared_ptr<Solver> batch_cg_precond =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
+            .on(this->exec)
+            ->generate(this->mtx);
+
+    auto batch_cg_factory =
+        Solver::build()
+            .with_criteria(
+                gko::stop::Iteration::build().with_max_iters(3u).on(this->exec))
+            .on(this->exec);
+    auto solver = batch_cg_factory->generate(this->mtx);
+    solver->set_preconditioner(batch_cg_precond);
+    auto precond = solver->get_preconditioner();
+
+    ASSERT_NE(precond.get(), nullptr);
+    ASSERT_EQ(precond.get(), batch_cg_precond.get());
+}
 
 
 }  // namespace

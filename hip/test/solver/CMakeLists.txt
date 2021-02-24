@@ -1,4 +1,3 @@
-ginkgo_create_hip_test_special_linkage(batch_cg_kernels)
 ginkgo_create_hip_test_special_linkage(bicg_kernels)
 ginkgo_create_hip_test_special_linkage(bicgstab_kernels)
 ginkgo_create_hip_test_special_linkage(cb_gmres_kernels)

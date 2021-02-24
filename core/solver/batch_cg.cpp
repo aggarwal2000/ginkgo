@@ -60,10 +60,9 @@ GKO_REGISTER_OPERATION(step_2, batch_cg::step_2);
 
 
 template <typename ValueType>
-std::unique_ptr<LinOp> BatchCg<ValueType>::transpose() const
+std::unique_ptr<BatchLinOp> BatchCg<ValueType>::transpose() const
     GKO_NOT_IMPLEMENTED;
 //{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
 //    return build()
 //        .with_generated_preconditioner(
 //            share(as<Transposable>(this->get_preconditioner())->transpose()))
@@ -75,10 +74,9 @@ std::unique_ptr<LinOp> BatchCg<ValueType>::transpose() const
 
 
 template <typename ValueType>
-std::unique_ptr<LinOp> BatchCg<ValueType>::conj_transpose() const
+std::unique_ptr<BatchLinOp> BatchCg<ValueType>::conj_transpose() const
     GKO_NOT_IMPLEMENTED;
 //{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
 //    return build()
 //        .with_generated_preconditioner(share(
 //            as<Transposable>(this->get_preconditioner())->conj_transpose()))
@@ -90,10 +88,9 @@ std::unique_ptr<LinOp> BatchCg<ValueType>::conj_transpose() const
 
 
 template <typename ValueType>
-void BatchCg<ValueType>::apply_impl(const LinOp *b,
-                                    LinOp *x) const GKO_NOT_IMPLEMENTED;
+void BatchCg<ValueType>::apply_impl(const BatchLinOp *b,
+                                    BatchLinOp *x) const GKO_NOT_IMPLEMENTED;
 //{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
 //    using std::swap;
 //    using Vector = matrix::Dense<ValueType>;
 //
@@ -171,11 +168,10 @@ void BatchCg<ValueType>::apply_impl(const LinOp *b,
 
 
 template <typename ValueType>
-void BatchCg<ValueType>::apply_impl(const LinOp *alpha, const LinOp *b,
-                                    const LinOp *beta,
-                                    LinOp *x) const GKO_NOT_IMPLEMENTED;
+void BatchCg<ValueType>::apply_impl(const BatchLinOp *alpha,
+                                    const BatchLinOp *b, const BatchLinOp *beta,
+                                    BatchLinOp *x) const GKO_NOT_IMPLEMENTED;
 //{
-// TODO (script:batch_cg): change the code imported from solver/cg if needed
 //    auto dense_x = as<matrix::Dense<ValueType>>(x);
 //
 //    auto x_clone = dense_x->clone();
