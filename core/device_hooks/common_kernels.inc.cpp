@@ -57,6 +57,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/preconditioner/isai_kernels.hpp"
 #include "core/preconditioner/jacobi_kernels.hpp"
 #include "core/reorder/rcm_kernels.hpp"
+#include "core/solver/batch_cg_kernels.hpp"
 #include "core/solver/bicg_kernels.hpp"
 #include "core/solver/bicgstab_kernels.hpp"
 #include "core/solver/cb_gmres_kernels.hpp"
@@ -445,6 +446,29 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_CG_STEP_2_KERNEL);
 
 
 }  // namespace cg
+
+
+// TODO (script:batch_cg): adapt this block as needed
+namespace batch_cg {
+
+
+template <typename ValueType>
+GKO_DECLARE_BATCH_CG_INITIALIZE_KERNEL(ValueType)
+GKO_NOT_COMPILED(GKO_HOOK_MODULE);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_BATCH_CG_INITIALIZE_KERNEL);
+
+template <typename ValueType>
+GKO_DECLARE_BATCH_CG_STEP_1_KERNEL(ValueType)
+GKO_NOT_COMPILED(GKO_HOOK_MODULE);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_BATCH_CG_STEP_1_KERNEL);
+
+template <typename ValueType>
+GKO_DECLARE_BATCH_CG_STEP_2_KERNEL(ValueType)
+GKO_NOT_COMPILED(GKO_HOOK_MODULE);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_BATCH_CG_STEP_2_KERNEL);
+
+
+}  // namespace batch_cg
 
 
 namespace bicg {

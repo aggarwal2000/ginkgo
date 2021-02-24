@@ -21,8 +21,8 @@ target_sources(ginkgo
     log/logger.cpp
     log/record.cpp
     log/stream.cpp
-    matrix/batch_dense.cpp
     matrix/batch_csr.cpp
+    matrix/batch_dense.cpp
     matrix/coo.cpp
     matrix/csr.cpp
     matrix/dense.cpp
@@ -36,13 +36,14 @@ target_sources(ginkgo
     preconditioner/isai.cpp
     preconditioner/jacobi.cpp
     reorder/rcm.cpp
+    solver/batch_cg.cpp
     solver/bicg.cpp
     solver/bicgstab.cpp
+    solver/cb_gmres.cpp
     solver/cg.cpp
     solver/cgs.cpp
     solver/fcg.cpp
     solver/gmres.cpp
-    solver/cb_gmres.cpp
     solver/idr.cpp
     solver/ir.cpp
     solver/lower_trs.cpp
