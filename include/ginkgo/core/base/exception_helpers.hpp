@@ -221,6 +221,18 @@ inline std::tuple<bool, int> compare_batch_cols(
 }
 
 
+inline std::tuple<bool, int> compare_batch_dims(
+    const std::vector<dim<2>> &size1)
+{
+    for (auto i = 0; i < size1.size(); ++i) {
+        if (size1[i][0] != size1[i][1]) {
+            return std::tuple<bool, int>{false, i};
+        }
+    }
+    return std::tuple<bool, int>{true, 0};
+}
+
+
 }  // namespace detail
 
 
@@ -251,6 +263,29 @@ inline std::tuple<bool, int> compare_batch_cols(
             ::gko::detail::get_size(_op1)[1], #_op1,                     \
             ::gko::detail::get_size(_op1)[0],                            \
             ::gko::detail::get_size(_op1)[1], "expected square matrix"); \
+    }
+
+
+/**
+ *Asserts that _op1 is a square matrix.
+ *
+ *@throw DimensionMismatch  if the number of rows of _op1 is different from the
+ *                          number of columns of _op1.
+ */
+#define GKO_ASSERT_IS_BATCH_SQUARE_MATRIX(_op1)                            \
+    {                                                                      \
+        auto comp = ::gko::detail::compare_batch_dims(                     \
+            ::gko::detail::get_batch_size(_op1));                          \
+        if (!std::get<0>(comp)) {                                          \
+            throw ::gko::DimensionMismatch(                                \
+                __FILE__, __LINE__, __func__, #_op1,                       \
+                ::gko::detail::get_batch_size(_op1)[std::get<1>(comp)][0], \
+                ::gko::detail::get_batch_size(_op1)[std::get<1>(comp)][1], \
+                #_op1,                                                     \
+                ::gko::detail::get_batch_size(_op1)[std::get<1>(comp)][0], \
+                ::gko::detail::get_batch_size(_op1)[std::get<1>(comp)][1], \
+                "expected square matrix");                                 \
+        }                                                                  \
     }
 
 
