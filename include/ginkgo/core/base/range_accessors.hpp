@@ -88,8 +88,6 @@ public:
      */
     static constexpr size_type dimensionality = 2;
 
-    using const_accessor = row_major<const ValueType, Dimensionality>;
-
 protected:
     /**
      * Creates a row_major accessor.
@@ -109,17 +107,6 @@ protected:
     {}
 
 public:
-    /**
-     * Creates a row_major range which contains a read-only version of the
-     * current accessor.
-     *
-     * @returns  a row major range which is read-only.
-     */
-    constexpr GKO_ATTRIBUTES range<const_accessor> to_const() const
-    {
-        return range<const_accessor>{data, lengths[0], lengths[1], stride};
-    }
-
     /**
      * Returns the data element at position (row, col)
      *
