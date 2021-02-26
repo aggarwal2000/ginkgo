@@ -380,6 +380,31 @@ TEST_F(Isai, CudaIsaiGenerateExcessAinverseLongIsEquivalentToRef)
 }
 
 
+TEST_F(Isai, CudaIsaiScaleExcessSolutionIsEquivalentToRef)
+{
+    initialize_data(matrix_type::lower, 572, 52);
+    const auto num_rows = mtx->get_size()[0];
+    gko::Array<index_type> a1(ref, num_rows + 1);
+    auto a2 = a1;
+    gko::kernels::reference::isai::generate_tri_inverse(
+        ref, mtx.get(), inverse.get(), a1.get_data(), a2.get_data(), true);
+    gko::Array<index_type> da1(cuda, a1);
+    auto e_dim = a1.get_data()[num_rows];
+    auto e_rhs = Dense::create(ref, gko::dim<2>(e_dim, 1));
+    std::fill_n(e_rhs->get_values(), e_dim, 123456);
+    auto de_rhs = Dense::create(cuda);
+    de_rhs->copy_from(lend(e_rhs));
+    d_inverse->copy_from(lend(inverse));
+
+    gko::kernels::reference::isai::scale_excess_solution(
+        ref, a1.get_const_data(), e_rhs.get(), 0, num_rows);
+    gko::kernels::cuda::isai::scale_excess_solution(cuda, da1.get_const_data(),
+                                                    de_rhs.get(), 0, num_rows);
+
+    GKO_ASSERT_MTX_NEAR(e_rhs, de_rhs, 0);
+}
+
+
 TEST_F(Isai, CudaIsaiScatterExcessSolutionLIsEquivalentToRef)
 {
     initialize_data(matrix_type::lower, 572, 52);
