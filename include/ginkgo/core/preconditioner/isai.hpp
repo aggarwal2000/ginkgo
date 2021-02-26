@@ -114,6 +114,7 @@ public:
                        : IsaiType == isai_type::lower ? isai_type::upper
                                                       : isai_type::lower,
              ValueType, IndexType>;
+    using Comp = Composition<ValueType>;
     using Csr = matrix::Csr<ValueType, IndexType>;
     using Dense = matrix::Dense<ValueType>;
     static constexpr isai_type type{IsaiType};
@@ -124,9 +125,12 @@ public:
      *
      * @returns the generated approximate inverse
      */
-    std::shared_ptr<const Csr> get_approximate_inverse() const
+    std::shared_ptr<const typename std::conditional<IsaiType == isai_type::spd,
+                                                    Comp, Csr>::type>
+    get_approximate_inverse() const
     {
-        return approximate_inverse_;
+        return as<typename std::conditional<IsaiType == isai_type::spd, Comp,
+                                            Csr>::type>(approximate_inverse_);
     }
 
     GKO_CREATE_FACTORY_PARAMETERS(parameters, Factory)
@@ -194,21 +198,16 @@ protected:
         const auto excess_limit = parameters_.excess_limit;
         generate_inverse(system_matrix, skip_sorting, power, excess_limit);
         if (IsaiType == isai_type::spd) {
-            approximate_inverse_transpose_ =
-                share(as<Csr>(approximate_inverse_->transpose()));
-            x_ = Dense::create(factory->get_executor(),
-                               gko::dim<2>{system_matrix->get_size()[0], 1});
+            auto inv = share(as<Csr>(approximate_inverse_));
+            auto inv_transp = share(inv->conj_transpose());
+            approximate_inverse_ =
+                Composition<ValueType>::create(inv_transp, inv);
         }
     }
 
     void apply_impl(const LinOp *b, LinOp *x) const override
     {
-        if (IsaiType == isai_type::spd) {
-            approximate_inverse_->apply(b, x_.get());
-            approximate_inverse_transpose_->apply(x_.get(), x);
-        } else {
-            approximate_inverse_->apply(b, x);
-        }
+        approximate_inverse_->apply(b, x);
     }
 
     void apply_impl(const LinOp *alpha, const LinOp *b, const LinOp *beta,
@@ -232,9 +231,7 @@ private:
                           bool skip_sorting, int power, int excess_limit);
 
 private:
-    std::shared_ptr<Csr> approximate_inverse_;
-    std::shared_ptr<Csr> approximate_inverse_transpose_;
-    std::shared_ptr<Dense> x_;
+    std::shared_ptr<LinOp> approximate_inverse_;
 };
 
 
