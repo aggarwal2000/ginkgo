@@ -421,13 +421,11 @@ void scale_excess_solution(std::shared_ptr<const DefaultExecutor>,
                            const size_type e_start, const size_type e_end)
 {
     auto excess_values = excess_solution->get_values();
-    IndexType block_start = 0;
-    IndexType block_end = 0;
     auto offset = excess_block_ptrs[e_start];
 #pragma omp parallel for
     for (size_type row = e_start; row < e_end; ++row) {
-        block_start = excess_block_ptrs[row] - offset;
-        block_end = excess_block_ptrs[row + 1] - offset;
+        IndexType block_start = excess_block_ptrs[row] - offset;
+        IndexType block_end = excess_block_ptrs[row + 1] - offset;
         const ValueType scal =
             one<ValueType>() / sqrt(excess_values[block_end - 1]);
         for (size_type i = block_start; i < block_end; i++) {

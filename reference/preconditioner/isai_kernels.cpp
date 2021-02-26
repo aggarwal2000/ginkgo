@@ -123,7 +123,7 @@ void generic_generate(std::shared_ptr<const DefaultExecutor> exec,
         excess_rhs_ptrs[row] = excess_rhs_begin;
         excess_nz_ptrs[row] = excess_nz_begin;
 
-        if (i_size <= 0) {  // row_size_limit) {
+        if (i_size <= row_size_limit) {
             // short rows: treat directly as dense system
             // we need this ugly workaround to get rid of a few
             // warnings and compilation issues
