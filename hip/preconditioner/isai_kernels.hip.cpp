@@ -178,8 +178,8 @@ void scale_excess_solution(std::shared_ptr<const DefaultExecutor>,
     const dim3 grid(ceildiv(e_end - e_start, block.x / subwarp_size), 1, 1);
     hipLaunchKernelGGL(
         HIP_KERNEL_NAME(kernel::scale_excess_solution<subwarp_size>), grid,
-        block, excess_block_ptrs, as_cuda_type(excess_solution->get_values()),
-        e_start, e_end);
+        block, 0, 0, excess_block_ptrs,
+        as_hip_type(excess_solution->get_values()), e_start, e_end);
 }
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(
