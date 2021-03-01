@@ -267,7 +267,7 @@ std::unique_ptr<LinOp> Isai<IsaiType, ValueType, IndexType>::transpose() const
 {
     auto is_spd = IsaiType == isai_type::spd;
     if (is_spd) {
-        return clone(this);
+        return this->clone();
     }
 
     std::unique_ptr<transposed_type> transp{
@@ -286,7 +286,7 @@ std::unique_ptr<LinOp> Isai<IsaiType, ValueType, IndexType>::conj_transpose()
 {
     auto is_spd = IsaiType == isai_type::spd;
     if (is_spd) {
-        return clone(this);
+        return this->clone();
     }
 
     std::unique_ptr<transposed_type> transp{

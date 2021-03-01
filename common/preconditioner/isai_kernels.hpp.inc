@@ -372,7 +372,9 @@ __global__ __launch_bounds__(default_block_size) void scale_excess_solution(
     const size_type e_end)
 {
     const auto warp_id = thread::get_subwarp_id_flat<subwarp_size, IndexType>();
-    const auto local_id = threadIdx.x % warp_id;
+    auto subwarp =
+        group::tiled_partition<subwarp_size>(group::this_thread_block());
+    const int local_id = subwarp.thread_rank();
 
     if (warp_id >= e_end - e_start) {
         return;

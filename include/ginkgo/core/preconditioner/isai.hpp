@@ -57,22 +57,27 @@ namespace preconditioner {
 /**
  * This enum lists the types of the ISAI preconditioner.
  *
- * ISAI can either generate a general matrix, a lower triangular matrix, or an
- * upper triangular matrix.
+ * ISAI can either be generated for a general square matrix, a lower triangular
+ * matrix, an upper triangular matrix or a spd matrix.
  */
 enum struct isai_type { lower, upper, general, spd };
 
 /**
  * The Incomplete Sparse Approximate Inverse (ISAI) Preconditioner generates
- * an approximate inverse matrix for a given lower triangular matrix L or upper
- * triangular matrix U.
+ * an approximate inverse matrix for a given square matrix A, lower triangular
+ * matrix L, upper triangular matrix U or symmetric positive (spd) matrix B.
  *
- * Using the preconditioner computes $aiU * x$ or $aiL * x$ (depending on the
- * type of the Isai) for a given vector x (may have multiple right hand sides).
- * aiU and aiL are the approximate inverses for U and L respectively.
+ * Using the preconditioner computes $aiA * x$, $aiU * x$, $aiL * x$ or $aiC^T *
+ * aiC * x$ (depending on the type of the Isai) for a given vector x (may have
+ * multiple right hand sides). aiA, aiU and aiL are the approximate inverses for
+ * A, U and L respectively. aiC is an approximation to C, the exact Cholesky
+ * factor of B (This is commonly referred to as a Factorized Sparse Approximate
+ * Inverse, short FSPAI).
  *
- * The sparsity pattern used for the approximate inverse is the same as
- * the sparsity pattern of the respective triangular matrix.
+ * The sparsity pattern used for the approximate inverse of A, L and U is the
+ * same as the sparsity pattern of the respective matrix. For B, the sparsity
+ * pattern used for the approximate inverse is the same as the sparsity pattern
+ * of the lower triangular half of B.
  *
  * For more details on the algorithm, see the paper
  * <a href="https://doi.org/10.1016/j.parco.2017.10.003">
@@ -84,8 +89,9 @@ enum struct isai_type { lower, upper, general, spd };
  *       matrix. If there are more than `width` elements per row, the remaining
  *       elements will be ignored.
  *
- * @tparam IsaiType  determines if the ISAI is generated for a lower triangular
- *                   matrix or an upper triangular matrix
+ * @tparam IsaiType  determines if the ISAI is generated for a general square
+ * matrix, a lower triangular matrix, an upper triangular matrix or an spd
+ * matrix
  * @tparam ValueType  precision of matrix elements
  * @tparam IndexType  precision of matrix indexes
  *
@@ -120,8 +126,9 @@ public:
     static constexpr isai_type type{IsaiType};
 
     /**
-     * Returns the approximate inverse of the given matrix (either L or U,
-     * depending on the template parameter IsaiType).
+     * Returns the approximate inverse of the given matrix (either a CSR matrix
+     * for IsaiType general, upper or lower or a composition of two CSR matrices
+     * for IsaiType spd).
      *
      * @returns the generated approximate inverse
      */
@@ -185,8 +192,7 @@ protected:
      * Creates an Isai preconditioner from a matrix using an Isai::Factory.
      *
      * @param factory  the factory to use to create the preconditoner
-     * @param factors  Composition<ValueType> of a lower triangular and an
-     *                 upper triangular matrix (L and U)
+     * @param system_matrix  the matrix for which an ISAI is to be computed
      */
     explicit Isai(const Factory *factory,
                   std::shared_ptr<const LinOp> system_matrix)
