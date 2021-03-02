@@ -143,8 +143,9 @@ void generic_generate(std::shared_ptr<const DefaultExecutor> exec,
                 forall_matching(
                     m_cols + m_begin, m_size, i_cols + i_begin, i_size,
                     [&](IndexType, IndexType m_idx, IndexType i_idx) {
-                        if (m_cols[m_idx + m_begin] < row && col == row)
+                        if (m_cols[m_idx + m_begin] < row && col == row) {
                             rhs_one_idx++;
+                        }
                         dense_system(i, i_idx) = m_vals[m_idx + m_begin];
                     });
             }
@@ -343,7 +344,7 @@ void generate_excess_system(std::shared_ptr<const DefaultExecutor>,
                             const IndexType *, const IndexType *,
                             matrix::Csr<ValueType, IndexType> *excess_system,
                             matrix::Dense<ValueType> *excess_rhs,
-                            const size_type e_start, const size_type e_end)
+                            size_type e_start, size_type e_end)
 {
     const auto num_rows = input->get_size()[0];
     const auto m_row_ptrs = input->get_const_row_ptrs();
@@ -401,7 +402,7 @@ template <typename ValueType, typename IndexType>
 void scale_excess_solution(std::shared_ptr<const DefaultExecutor>,
                            const IndexType *excess_block_ptrs,
                            matrix::Dense<ValueType> *excess_solution,
-                           const size_type e_start, const size_type e_end)
+                           size_type e_start, size_type e_end)
 {
     auto excess_values = excess_solution->get_values();
     IndexType block_start = 0;
@@ -427,7 +428,7 @@ void scatter_excess_solution(std::shared_ptr<const DefaultExecutor>,
                              const IndexType *excess_block_ptrs,
                              const matrix::Dense<ValueType> *excess_solution,
                              matrix::Csr<ValueType, IndexType> *inverse,
-                             const size_type e_start, const size_type e_end)
+                             size_type e_start, size_type e_end)
 {
     auto excess_values = excess_solution->get_const_values();
     auto values = inverse->get_values();
