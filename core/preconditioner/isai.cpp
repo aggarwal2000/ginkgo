@@ -120,7 +120,7 @@ std::shared_ptr<Csr> extend_sparsity(std::shared_ptr<const Executor> &exec,
 template <isai_type IsaiType, typename ValueType, typename IndexType>
 void Isai<IsaiType, ValueType, IndexType>::generate_inverse(
     std::shared_ptr<const LinOp> input, bool skip_sorting, int power,
-    int excess_limit)
+    IndexType excess_limit)
 {
     using Dense = matrix::Dense<ValueType>;
     using LowerTrs = solver::LowerTrs<ValueType, IndexType>;

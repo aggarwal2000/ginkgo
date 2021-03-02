@@ -79,6 +79,9 @@ enum struct isai_type { lower, upper, general, spd };
  * pattern used for the approximate inverse is the same as the sparsity pattern
  * of the lower triangular half of B.
  *
+ * Note that, except for the spd case, for a matrix A generally
+ * ISAI(A)^T != ISAI(A^T).
+ *
  * For more details on the algorithm, see the paper
  * <a href="https://doi.org/10.1016/j.parco.2017.10.003">
  * Incomplete Sparse Approximate Inverses for Parallel Preconditioning</a>,
@@ -173,7 +176,7 @@ public:
          * solution has been computed.
          * Must be at least 0, default value 0.
          */
-        int GKO_FACTORY_PARAMETER_SCALAR(excess_limit, 0);
+        index_type GKO_FACTORY_PARAMETER_SCALAR(excess_limit, 0);
     };
 
     GKO_ENABLE_LIN_OP_FACTORY(Isai, parameters, Factory);
@@ -234,7 +237,8 @@ private:
      *                      be skipped.
      */
     void generate_inverse(std::shared_ptr<const LinOp> to_invert,
-                          bool skip_sorting, int power, int excess_limit);
+                          bool skip_sorting, int power,
+                          index_type excess_limit);
 
 private:
     std::shared_ptr<LinOp> approximate_inverse_;
