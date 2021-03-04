@@ -66,7 +66,7 @@ function(ginkgo_install)
         "${Ginkgo_BINARY_DIR}/GinkgoConfig.cmake"
         INSTALL_DESTINATION "${GINKGO_INSTALL_CONFIG_DIR}"
         )
-    set(HELPERS "hip_helpers.cmake" "windows_helpers.cmake")
+    set(HELPERS "hip_helpers.cmake")
     foreach (helper ${HELPERS})
         configure_file(${Ginkgo_SOURCE_DIR}/cmake/${helper}
             ${Ginkgo_BINARY_DIR}/${helper} COPYONLY)
@@ -76,12 +76,6 @@ function(ginkgo_install)
         "${Ginkgo_BINARY_DIR}/GinkgoConfigVersion.cmake"
         DESTINATION "${GINKGO_INSTALL_CONFIG_DIR}"
         )
-    if (WIN32 OR CYGWIN)
-        install(FILES
-            "${Ginkgo_SOURCE_DIR}/cmake/windows_helpers.cmake"
-            DESTINATION "${GINKGO_INSTALL_CONFIG_DIR}"
-            )
-    endif()
     if (GINKGO_BUILD_HIP)
         install(FILES
             "${Ginkgo_SOURCE_DIR}/cmake/hip_helpers.cmake"
