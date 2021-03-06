@@ -10,17 +10,12 @@ set(GINKGO_INSTALL_MODULE_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/Ginkgo/Modules")
 
 function(ginkgo_install_library name subdir)
     if (BUILD_SHARED_LIBS)
-        set (HWLOC_LIB_PATH "")
-        if  (GINKGO_HAVE_HWLOC AND GINKGO_USE_EXTERNAL_HWLOC)
-            get_filename_component(HWLOC_LIB_PATH ${HWLOC_LIBRARIES} DIRECTORY)
-        endif()
         if (APPLE)
             set(ORIGIN_OR_LOADER_PATH "@loader_path")
         else()
             set(ORIGIN_OR_LOADER_PATH "$ORIGIN")
         endif()
-        set_property(TARGET "${name}" PROPERTY INSTALL_RPATH
-        "${ORIGIN_OR_LOADER_PATH}" "${HWLOC_LIB_PATH}" "${ARGN}")
+        set_property(TARGET "${name}" PROPERTY INSTALL_RPATH "${ORIGIN_OR_LOADER_PATH}")
     endif()
     if (WIN32 OR CYGWIN)
         # dll is considered as runtime

@@ -268,15 +268,9 @@ elseif(GINKGO_HIP_PLATFORM MATCHES "nvcc")
     target_link_libraries(ginkgo_hip PUBLIC ${CUDA_LIBRARIES})
 endif()
 
-set(RPATH_ADD_HIP_PATH "")
-if (GINKGO_BUILD_HIP AND GINKGO_HIP_PLATFORM MATCHES "hcc")
-    set(RPATH_ADD_HIP_PATH "${HIP_PATH}/lib")
-endif()
-
 ginkgo_compile_features(ginkgo_hip)
 ginkgo_default_includes(ginkgo_hip)
-ginkgo_install_library(ginkgo_hip hip "${RPATH_ADD_HIP_PATH}" "${HIPBLAS_PATH}/lib"
-    "${HIPRAND_PATH}/lib" "${HIPSPARSE_PATH}/lib" "${ROCRAND_PATH}/lib")
+ginkgo_install_library(ginkgo_hip hip)
 
 if (GINKGO_CHECK_CIRCULAR_DEPS)
     ginkgo_check_headers(ginkgo_hip)
