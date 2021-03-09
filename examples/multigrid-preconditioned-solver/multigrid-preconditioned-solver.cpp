@@ -1,5 +1,5 @@
 /*******************************<GINKGO LICENSE>******************************
-Copyright (c) 2017-2020, the Ginkgo authors
+Copyright (c) 2017-2021, the Ginkgo authors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
                 gko::stop::Iteration::build().with_max_iters(2u).on(exec))
             .on(exec));
     // Create RestrictProlong factory
-    auto rstr_prlg_gen = amgx_pgm::build().with_deterministic(true).on(exec);
+    auto mg_level_gen = amgx_pgm::build().with_deterministic(true).on(exec);
     // Create CoarsesSolver factory
     auto coarsest_solver_gen =
         cg::build()
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
             .with_min_coarse_rows(50u)
             .with_pre_smoother(gko::share(smoother_gen))
             .with_post_uses_pre(true)
-            .with_rstr_prlg(gko::share(rstr_prlg_gen))
+            .with_mg_level_a(gko::share(mg_level_gen))
             .with_coarsest_solver(gko::share(smoother_gen))
             .with_criteria(gko::share(iter_stop), gko::share(tol_stop))
             // .with_criteria(
