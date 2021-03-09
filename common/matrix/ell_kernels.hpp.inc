@@ -45,7 +45,7 @@ __device__ void spmv_kernel(
     OutputValueType *__restrict__ c, const size_type c_stride, Closure op)
 {
     const auto tidx = thread::get_thread_id_flat();
-    const auto column_id = blockIdx.y;
+    const decltype(tidx) column_id = blockIdx.y;
     if (num_thread_per_worker == 1) {
         // Specialize the num_thread_per_worker = 1. It doesn't need the shared
         // memory, __syncthreads, and atomic_add
