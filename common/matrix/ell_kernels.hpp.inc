@@ -37,14 +37,12 @@ namespace {
 template <int num_thread_per_worker, bool atomic, typename b_accessor,
           typename a_accessor, typename OutputValueType, typename IndexType,
           typename Closure>
-__device__ void spmv_kernel(const size_type num_rows,
-                            const int num_worker_per_row, range<a_accessor> val,
-                            const IndexType *__restrict__ col,
-                            const size_type stride,
-                            const size_type num_stored_elements_per_row,
-                            range<b_accessor> b, const size_type b_stride,
-                            OutputValueType *__restrict__ c,
-                            const size_type c_stride, Closure op)
+__device__ void spmv_kernel(
+    const size_type num_rows, const int num_worker_per_row,
+    acc::range<a_accessor> val, const IndexType *__restrict__ col,
+    const size_type stride, const size_type num_stored_elements_per_row,
+    acc::range<b_accessor> b, const size_type b_stride,
+    OutputValueType *__restrict__ c, const size_type c_stride, Closure op)
 {
     const auto tidx = thread::get_thread_id_flat();
     const auto column_id = blockIdx.y;
@@ -59,7 +57,7 @@ __device__ void spmv_kernel(const size_type num_rows,
                 if (col_idx < idx) {
                     break;
                 } else {
-                    temp += val(ind) * b(col_idx * b_stride, column_id);
+                    temp += val(ind) * b(col_idx, column_id);
                 }
             }
             const auto c_ind = tidx * c_stride + column_id;
@@ -87,7 +85,7 @@ __device__ void spmv_kernel(const size_type num_rows,
                 if (col_idx < idx) {
                     break;
                 } else {
-                    temp += val(ind) * b([col_idx * b_stride, column_id);
+                    temp += val(ind) * b(col_idx, column_id);
                 }
             }
             atomic_add(&storage[threadIdx.x], temp);
@@ -109,9 +107,9 @@ template <int num_thread_per_worker, bool atomic = false, typename b_accessor,
           typename a_accessor, typename OutputValueType, typename IndexType>
 __global__ __launch_bounds__(default_block_size) void spmv(
     const size_type num_rows, const int num_worker_per_row,
-    range<a_accessor> val, const IndexType *__restrict__ col,
+    acc::range<a_accessor> val, const IndexType *__restrict__ col,
     const size_type stride, const size_type num_stored_elements_per_row,
-    range<b_accessor> b, const size_type b_stride,
+    acc::range<b_accessor> b, const size_type b_stride,
     OutputValueType *__restrict__ c, const size_type c_stride)
 {
     spmv_kernel<num_thread_per_worker, atomic>(
@@ -125,9 +123,9 @@ template <int num_thread_per_worker, bool atomic = false, typename b_accessor,
           typename a_accessor, typename OutputValueType, typename IndexType>
 __global__ __launch_bounds__(default_block_size) void spmv(
     const size_type num_rows, const int num_worker_per_row,
-    range<a_accessor> alpha, range<a_accessor> val,
+    acc::range<a_accessor> alpha, acc::range<a_accessor> val,
     const IndexType *__restrict__ col, const size_type stride,
-    const size_type num_stored_elements_per_row, range<b_accessor> b,
+    const size_type num_stored_elements_per_row, acc::range<b_accessor> b,
     const size_type b_stride, const OutputValueType *__restrict__ beta,
     OutputValueType *__restrict__ c, const size_type c_stride)
 {

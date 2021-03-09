@@ -108,12 +108,11 @@ using compiled_kernels = syn::value_list<int, 0, 1, 2, 4, 8, 16, 32>;
 
 namespace {
 
-
 template <int dim, typename Type1, typename Type2>
 GKO_INLINE auto as_cuda_accessor(
-    const range<accessor::reduced_row_major<dim, Type1, Type2>> &acc)
+    const acc::range<acc::reduced_row_major<dim, Type1, Type2>> &acc)
 {
-    return range<
+    return acc::range<
         acc::reduced_row_major<dim, cuda_type<Type1>, cuda_type<Type2>>>(
         acc.get_accessor().get_size(),
         as_cuda_type(acc.get_accessor().get_stored_data()),
@@ -149,10 +148,11 @@ void abstract_spmv(syn::value_list<int, info>, int num_worker_per_row,
                          b->get_size()[1], 1);
 
     const auto a_vals = gko::acc::range<a_accessor>(
-        std::array<long unsigned int, 1>{num_stored_elements_per_row * stride},
+        std::array<long unsigned int, 1>{
+            {num_stored_elements_per_row * stride}},
         a->get_const_values());
     const auto b_vals = gko::acc::range<b_accessor>(
-        std::array<long unsigned int, 2>{nrows, b->get_stride()},
+        std::array<long unsigned int, 2>{{nrows, b->get_stride()}},
         b->get_const_values());
 
     if (alpha == nullptr && beta == nullptr) {
