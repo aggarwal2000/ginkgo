@@ -136,7 +136,7 @@ foreach(log_type ${log_types})
     ginkgo_print_module_footer(${${log_type}} "  Developer helpers:")
     ginkgo_print_foreach_variable(${${log_type}}
         "GINKGO_DEVEL_TOOLS;GINKGO_WITH_CLANG_TIDY;GINKGO_WITH_IWYU"
-        "GINKGO_CHECK_CIRCULAR_DEPS;GINKGO_CHECK_PATH")
+        "GINKGO_CHECK_CIRCULAR_DEPS")
     ginkgo_print_module_footer(${${log_type}} "")
 endforeach()
 

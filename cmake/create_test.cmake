@@ -14,7 +14,9 @@ function(ginkgo_create_test test_name)
         target_link_libraries(${TEST_TARGET_NAME} PRIVATE "${GINKGO_CIRCULAR_DEPS_FLAGS}")
     endif()
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+    add_test(NAME ${REL_BINARY_DIR}/${test_name}
+        COMMAND ${TEST_TARGET_NAME}
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_test)
 
 function(ginkgo_create_dpcpp_test test_name)
@@ -34,7 +36,9 @@ function(ginkgo_create_dpcpp_test test_name)
         target_link_libraries(${TEST_TARGET_NAME} PRIVATE "${GINKGO_CIRCULAR_DEPS_FLAGS}")
     endif()
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+    add_test(NAME ${REL_BINARY_DIR}/${test_name}
+        COMMAND ${TEST_TARGET_NAME}
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_dpcpp_test)
 
 function(ginkgo_create_thread_test test_name)
@@ -56,7 +60,9 @@ function(ginkgo_create_thread_test test_name)
     endif()
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest
         Threads::Threads ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+        add_test(NAME ${REL_BINARY_DIR}/${test_name}
+            COMMAND ${TEST_TARGET_NAME}
+            WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_thread_test)
 
 function(ginkgo_create_test_cpp_cuda_header test_name)
@@ -76,7 +82,9 @@ function(ginkgo_create_test_cpp_cuda_header test_name)
         target_link_libraries(${TEST_TARGET_NAME} PRIVATE "${GINKGO_CIRCULAR_DEPS_FLAGS}")
     endif()
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+    add_test(NAME ${REL_BINARY_DIR}/${test_name}
+        COMMAND ${TEST_TARGET_NAME}
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_test_cpp_cuda_header)
 
 function(ginkgo_create_cuda_test test_name)
@@ -98,7 +106,9 @@ function(ginkgo_create_cuda_test test_name)
         target_link_libraries(${TEST_TARGET_NAME} PRIVATE "${GINKGO_CIRCULAR_DEPS_FLAGS}")
     endif()
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+    add_test(NAME ${REL_BINARY_DIR}/${test_name}
+        COMMAND ${TEST_TARGET_NAME}
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_cuda_test)
 
 function(ginkgo_create_hip_test_special_linkage test_name)
@@ -122,7 +132,9 @@ function(ginkgo_create_hip_test_special_linkage test_name)
         target_link_libraries(${TEST_TARGET_NAME} PRIVATE "${GINKGO_CIRCULAR_DEPS_FLAGS}")
     endif()
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+    add_test(NAME ${REL_BINARY_DIR}/${test_name}
+        COMMAND ${TEST_TARGET_NAME}
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_hip_test_special_linkage)
 
 function(ginkgo_create_hip_test test_name)
@@ -184,5 +196,7 @@ function(ginkgo_create_hip_test test_name)
     endif()
 
     target_link_libraries(${TEST_TARGET_NAME} PRIVATE ginkgo GTest::Main GTest::GTest ${ARGN})
-    add_test(NAME ${REL_BINARY_DIR}/${test_name} COMMAND ${TEST_TARGET_NAME})
+    add_test(NAME ${REL_BINARY_DIR}/${test_name}
+        COMMAND ${TEST_TARGET_NAME}
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ginkgo>")
 endfunction(ginkgo_create_hip_test)
