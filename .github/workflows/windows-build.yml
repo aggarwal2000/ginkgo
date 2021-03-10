@@ -56,7 +56,7 @@ jobs:
         ctest . -C ${{ matrix.config.build_type }} --output-on-failure
     - name: install
       run: |
-        $env:PATH="$env:PATH;C:\Program Files (x86)\Ginkgo\lib"
+        $env:PATH="$env:PATH;C:\Program Files (x86)\Ginkgo\bin"
         cd build
         cmake --install . --config ${{ matrix.config.build_type }}
         cmake --build . --target test_install --config ${{ matrix.config.build_type }}
@@ -86,7 +86,7 @@ jobs:
     - name: install
       run: |
         set PATH=%PATH:C:\Program Files\Git\bin;=%
-        set PATH=%PATH:C:\Program Files\Git\usr\bin;=%;C:\Program Files (x86)\Ginkgo\lib
+        set PATH=%PATH:C:\Program Files\Git\usr\bin;=%;C:\Program Files (x86)\Ginkgo\bin
         cd build
         cmake --install .
         cmake --build . --target test_install
@@ -122,5 +122,5 @@ jobs:
         path C:\tools\cygwin\bin
         cd build
         bash -c "make install"
-        bash -c "export PATH=/usr/local/lib:$PATH && make test_install"
+        bash -c "export PATH=/usr/local/bin:$PATH && make test_install"
       shell: cmd
