@@ -55,6 +55,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/multigrid/amgx_pgm_kernels.hpp"
 #include "core/preconditioner/isai_kernels.hpp"
 #include "core/preconditioner/jacobi_kernels.hpp"
+#include "core/preconditioner/scalarjacobi_kernels.hpp"
 #include "core/reorder/rcm_kernels.hpp"
 #include "core/solver/bicg_kernels.hpp"
 #include "core/solver/bicgstab_kernels.hpp"
@@ -1014,6 +1015,29 @@ GKO_NOT_COMPILED(GKO_HOOK_MODULE);
 
 
 }  // namespace jacobi
+
+
+// TODO (script:scalarjacobi): adapt this block as needed
+namespace scalarjacobi {
+
+
+template <typename ValueType>
+GKO_DECLARE_SCALARJACOBI_GENERATE_KERNEL(ValueType)
+GKO_NOT_COMPILED(GKO_HOOK_MODULE);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_GENERATE_KERNEL);
+
+template <typename ValueType>
+GKO_DECLARE_SCALARJACOBI_APPLY_KERNEL(ValueType)
+GKO_NOT_COMPILED(GKO_HOOK_MODULE);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_APPLY_KERNEL);
+
+template <typename ValueType>
+GKO_DECLARE_SCALARJACOBI_SIMPLE_APPLY_KERNEL(ValueType)
+GKO_NOT_COMPILED(GKO_HOOK_MODULE);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(
+    GKO_DECLARE_SCALARJACOBI_SIMPLE_APPLY_KERNEL);
+
+}  // namespace scalarjacobi
 
 
 namespace isai {

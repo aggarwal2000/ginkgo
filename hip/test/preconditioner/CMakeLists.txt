@@ -1,2 +1,3 @@
-ginkgo_create_hip_test_special_linkage(jacobi_kernels)
 ginkgo_create_hip_test(isai_kernels)
+ginkgo_create_hip_test_special_linkage(jacobi_kernels)
+ginkgo_create_hip_test_special_linkage(scalarjacobi_kernels)

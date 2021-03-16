@@ -1,0 +1,319 @@
+
+###Summary:
+Created preconditioner file
+core/preconditioner/scalarjacobi.cpp
+	This is where the scalarjacobi algorithm needs to be implemented.
+
+Created class header
+include/ginkgo/core/preconditioner/scalarjacobi.hpp
+	This is where the scalarjacobi class functions need to be implemented.
+
+Created kernel header
+core/preconditioner/scalarjacobi_kernels.hpp
+	This is where the algorithm-specific kernels need to be added.
+
+Created Reference kernel file
+reference/preconditioner/scalarjacobi_kernels.cpp
+	Reference kernels for scalarjacobi need to be implemented here.
+
+Created OpenMP kernel file
+omp/preconditioner/scalarjacobi_kernels.cpp
+	OMP kernels for scalarjacobi need to be implemented here.
+
+Created CUDA kernel file
+cuda/preconditioner/scalarjacobi_*.[ch]*
+	CUDA kernels for scalarjacobi need to be implemented here.
+
+Created HIP kernel file
+hip/preconditioner/scalarjacobi_kernels.hip.cpp
+	HIP kernels for scalarjacobi need to be implemented here.
+
+Created DPC++ kernel file
+dpcpp/preconditioner/scalarjacobi_kernels.dp.cpp
+	DPC++ kernels for scalarjacobi need to be implemented here.
+
+Created unit tests for scalarjacobi preconditioner
+core/test/preconditioner/scalarjacobi.cpp
+	This is where core related unit tests should be implemented, i.e. relating to the interface without executor usage.
+
+Created unit tests for scalarjacobi reference kernels
+reference/test/preconditioner/scalarjacobi_kernels.cpp
+	This is where tests with the Reference executor should be implemented. Usually, this means comparing against previously known values.
+
+Created unit tests for scalarjacobi OMP kernels
+omp/test/preconditioner/scalarjacobi_kernels.cpp
+	This is where tests with the OpenMP executor should be implemented. Usually, this means comparing against a Reference execution.
+
+Created unit tests for scalarjacobi CUDA kernels
+cuda/test/preconditioner/scalarjacobi_kernels.cpp
+	This is where tests with the CUDA executor should be implemented. Usually, this means comparing against a Reference execution.
+
+Created unit tests for scalarjacobi HIP kernels
+hip/test/preconditioner/scalarjacobi_kernels.*
+	This is where tests with the HIP executor should be implemented. Usually, this means comparing against a Reference execution.
+
+Created unit tests for scalarjacobi DPC++ kernels
+dpcpp/test/preconditioner/scalarjacobi_kernels.*
+	This is where tests with the DPC++ executor should be implemented. Usually, this means comparing against a Reference execution.
+
+Modified core/CMakeLists.txt
+Modified reference/CMakeLists.txt
+Modified omp/CMakeLists.txt
+Modified cuda/CMakeLists.txt
+Modified hip/CMakeLists.txt
+Modified dpcpp/CMakeLists.txt
+Modified core/test/preconditioner/CMakeLists.txt
+Modified reference/test/preconditioner/CMakeLists.txt
+Modified omp/test/preconditioner/CMakeLists.txt
+Modified cuda/test/preconditioner/CMakeLists.txt
+Modified hip/test/preconditioner/CMakeLists.txt
+Modified dpcpp/test/preconditioner/CMakeLists.txt
+Modified core/device_hooks/common_kernels.inc.cpp
+
+
+
+### TODO:
+In all of the previous files jacobi was automatically replaced into scalarjacobi. Ensure there is no inconsistency.
+
+All the imported code was commented and TODO items were generated in the new files.
+Check all the modified files for "// TODO (script:scalarjacobi):" items
+e.g. by using  grep -nR "// TODO (script:scalarjacobi):" /home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../.. | grep -v "create_new_algorithm.sh" | grep -v "todo_scalarjacobi.txt".
+
+A tentative list of relevant TODO items follows:
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:84:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:92:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:100:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:116:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:132:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:148:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:177:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:186:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:194:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:202:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/test/preconditioner/scalarjacobi.cpp:210:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/device_hooks/common_kernels.inc.cpp:1020:// TODO (script:scalarjacobi): adapt this block as needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:75:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:90:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:105:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:120:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:129:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:165:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:188:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:212:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../core/preconditioner/scalarjacobi.cpp:228:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:163:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:192:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:223:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:253:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:281:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:310:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:323:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:338:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:352:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:366:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:382:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:398:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:413:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:429:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:445:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:465:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:481:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:501:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:518:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:541:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:577:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:591:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:606:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:621:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:636:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:651:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:666:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:684:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:701:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:718:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:735:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:752:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:769:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:786:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:803:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:820:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:841:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:858:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:875:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/test/preconditioner/scalarjacobi_kernels.cpp:894:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:74:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:91:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:103:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:139:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:170:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:190:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:217:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:233:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:247:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:280:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:300:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:322:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:337:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:360:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:399:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:503:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:546:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:582:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:618:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:657:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../omp/preconditioner/scalarjacobi_kernels.cpp:696:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:164:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:193:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:224:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:254:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:282:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:311:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:324:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:339:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:353:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:367:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:383:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:399:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:414:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:430:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:446:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:466:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:482:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:502:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:519:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:542:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:578:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:592:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:607:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:622:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:637:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:652:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:667:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:685:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:702:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:719:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:736:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:753:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:770:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:787:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:804:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:821:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:842:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:859:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:876:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/test/preconditioner/scalarjacobi_kernels.cpp:895:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:78:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:103:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:122:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:140:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:165:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:202:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_kernels.cu:228:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_generate_kernel.cu:84:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_generate_kernel.cu:128:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_simple_apply_kernel.cu:80:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_simple_apply_kernel.cu:119:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_advanced_apply_kernel.cu:81:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_advanced_apply_kernel.cu:123:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../cuda/preconditioner/scalarjacobi_common.hpp:60:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:167:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:196:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:227:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:257:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:285:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:314:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:327:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:343:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:357:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:371:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:385:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:401:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:417:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:433:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:449:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:465:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:481:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:501:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:517:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:537:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:554:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:577:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:613:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:627:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:642:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:657:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:672:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:687:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:702:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:720:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:737:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:754:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:771:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:788:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:805:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:822:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:839:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:856:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:877:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:894:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:911:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/test/preconditioner/scalarjacobi_kernels.cpp:930:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:85:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:112:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:132:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:151:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:176:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:217:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../hip/preconditioner/scalarjacobi_kernels.hip.cpp:243:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:126:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:144:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:165:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:197:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:231:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:268:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:288:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:316:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:349:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:379:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:412:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:442:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:475:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:510:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:553:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:600:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:615:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:640:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:684:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:700:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:717:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:741:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:768:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:796:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:831:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:850:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:869:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:900:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:930:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:951:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/test/preconditioner/scalarjacobi_kernels.cpp:973:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:72:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:84:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:120:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:151:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:171:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:198:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:214:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:228:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:261:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:281:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:303:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:318:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:341:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:380:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:483:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:518:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:539:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:574:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:609:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:647:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
+/home/isha/Desktop/GinkgoFork/ginkgo/dev_tools/scripts/../../reference/preconditioner/scalarjacobi_kernels.cpp:685:// TODO (script:scalarjacobi): change the code imported from preconditioner/jacobi if needed
