@@ -75,11 +75,7 @@ void generate(std::shared_ptr<const CudaExecutor> exec,
               Array<ValueType> &inv_eles)
 {
     const auto num_rows = system_matrix->get_size()[0];
-    const auto row_ptrs =
-        system_matrix
-            ->get_const_row_ptrs();  // Really need const here ? const int a =
-                                     // 3; auto b = a; b is not const right, but
-                                     // with pointers it is..?
+    const auto row_ptrs = system_matrix->get_const_row_ptrs();
     const auto col_idxs = system_matrix->get_const_col_idxs();
     const auto vals = system_matrix->get_const_values();
 
