@@ -70,17 +70,6 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_GENERATE_KERNEL);
 
 
 template <typename ValueType>
-void apply(std::shared_ptr<const HipExecutor> exec,
-           const Array<ValueType> &inv_eles,
-           const matrix::Dense<ValueType> *alpha,
-           const matrix::Dense<ValueType> *b,
-           const matrix::Dense<ValueType> *beta,
-           matrix::Dense<ValueType> *x) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_APPLY_KERNEL);
-
-
-template <typename ValueType>
 void simple_apply(std::shared_ptr<const HipExecutor> exec,
                   const Array<ValueType> &inv_eles,
                   const matrix::Dense<ValueType> *b,

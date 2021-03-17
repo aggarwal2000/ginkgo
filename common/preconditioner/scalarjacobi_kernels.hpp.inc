@@ -40,50 +40,37 @@ __global__ __launch_bounds__(default_block_size) void generate_kernel(
     const IndexType *__restrict__ col_idxs, const ValueType *__restrict__ vals,
     ValueType *__restrict__ inv)
 {
-    /*
-      constexpr auto warp_size = config::warp_size;
-      const auto row_idx = thread::get_subwarp_id_flat<warp_size>();
-      auto warp_tile =
-          group::tiled_partition<warp_size>(group::this_thread_block());
+    constexpr auto warp_size = config::warp_size;
+    const auto row_idx = thread::get_subwarp_id_flat<warp_size>();
+    auto warp_tile =
+        group::tiled_partition<warp_size>(group::this_thread_block());
 
 
-          if (row_idx < num_rows) {
+    if (row_idx < num_rows) {
+        auto temp = zero<ValueType>();
 
-              auto temp =  zero<ValueType>();
+        for (auto i = warp_tile.thread_rank() + row_ptrs[row_idx];
+             i < row_ptrs[row_idx + 1]; i += warp_size) {
+            if (col_idxs[i] == row_idx) {
+                temp = vals[i];
 
-              for (auto i = warp_tile.thread_rank() + row_ptrs[row_idx]; i <
-      row_ptrs[row_idx + 1]; i += warp_size) {
+                inv[row_idx] = temp;
+            }
+        }
 
-                  if(col_idxs[i] == row_idx)
-                  {
-                      temp = vals[i];
+        __syncwarp();
 
-                      inv[row_idx] = temp;
-
-                  }
-
-              }
-
-              __syncwarp();
-
-              if(warp_tile.thread_rank() == 0)
-              {
-                  if(inv[row_idx] != zero<ValueType>())
-                  {
-                      inv[row_idx] = inv[row_idx]/one<ValueType>();
-                  }
-                  else
-                  {
-                      printf("\n Scalar jacobi preconditioner generation fails
-      due to 0 at diagonal position, %d, %s ", __LINE__ , __FILE__);
-                  }
-              }
-
-
-
-      }
-
-   */
+        if (warp_tile.thread_rank() == 0) {
+            if (inv[row_idx] != zero<ValueType>()) {
+                inv[row_idx] = one<ValueType>() / inv[row_idx];
+            } else {
+                printf(
+                    "\n Scalar jacobi preconditioner generation fails due to 0 "
+                    "at diagonal position, %d, %s ",
+                    __LINE__, __FILE__);
+            }
+        }
+    }
 }
 
 

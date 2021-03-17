@@ -156,6 +156,8 @@ public:
      */
     LinOp *apply(const LinOp *b, LinOp *x)
     {
+        std::cout << "\n\nCalled apply() method from line: " << __LINE__
+                  << std::endl;
         this->template log<log::Logger::linop_apply_started>(this, b, x);
         this->validate_application_parameters(b, x);
         auto exec = this->get_executor();
@@ -170,6 +172,8 @@ public:
      */
     const LinOp *apply(const LinOp *b, LinOp *x) const
     {
+        std::cout << "\n\nCalled apply method from line: " << __LINE__
+                  << std::endl;
         this->template log<log::Logger::linop_apply_started>(this, b, x);
         this->validate_application_parameters(b, x);
         auto exec = this->get_executor();
@@ -380,6 +384,7 @@ public:
 
     std::unique_ptr<LinOp> generate(std::shared_ptr<const LinOp> input) const
     {
+        std::cout << "Calling factory generate method " << std::endl;
         this->template log<log::Logger::linop_factory_generate_started>(
             this, input.get());
         auto generated = AbstractFactory::generate(input);
@@ -771,6 +776,8 @@ public:
 
     const ConcreteLinOp *apply(const LinOp *b, LinOp *x) const
     {
+        std::cout << "\n\nCalled apply() method on linop object" << std::endl
+                  << std::endl;
         this->template log<log::Logger::linop_apply_started>(this, b, x);
         this->validate_application_parameters(b, x);
         auto exec = this->get_executor();
@@ -782,6 +789,8 @@ public:
 
     ConcreteLinOp *apply(const LinOp *b, LinOp *x)
     {
+        std::cout << "\n\nCalled apply() method on linop object" << std::endl
+                  << std::endl;
         this->template log<log::Logger::linop_apply_started>(this, b, x);
         this->validate_application_parameters(b, x);
         auto exec = this->get_executor();

@@ -55,7 +55,6 @@ namespace scalarjacobi {
 
 
 GKO_REGISTER_OPERATION(simple_apply, scalarjacobi::simple_apply);
-GKO_REGISTER_OPERATION(apply, scalarjacobi::apply);
 GKO_REGISTER_OPERATION(generate, scalarjacobi::generate);
 
 
@@ -67,9 +66,11 @@ void Scalarjacobi<ValueType>::generate_scalar_jacobi(const LinOp *system_matrix)
     GKO_ASSERT_IS_SQUARE_MATRIX(system_matrix);
     using csr_type = matrix::Csr<ValueType, int32>;
     const auto exec = this->get_executor();
+    const bool skip_sorting = true;
     auto csr_mtx = convert_to_with_sorting<csr_type>(
-        exec, system_matrix, true);  // replace with normal function (We don't
-                                     // want to sort if unsorted matrix)
+        exec, system_matrix,
+        skip_sorting);  // sorting is not required. No need to sort even if the
+                        // original matrix is unsorted.
 
     exec->run(scalarjacobi::make_generate(csr_mtx.get(), inv_eles_));
 }
@@ -91,10 +92,12 @@ template <typename ValueType>
 void Scalarjacobi<ValueType>::apply_impl(const LinOp *alpha, const LinOp *b,
                                          const LinOp *beta, LinOp *x) const
 {
-    using dense = matrix::Dense<ValueType>;
-    this->get_executor()->run(
-        scalarjacobi::make_apply(inv_eles_, as<dense>(alpha), as<dense>(b),
-                                 as<dense>(beta), as<dense>(x)));
+    auto dense_x = as<matrix::Dense<ValueType>>(x);
+
+    auto x_clone = dense_x->clone();
+    this->apply(b, x_clone.get());
+    dense_x->scale(beta);
+    dense_x->add_scaled(alpha, x_clone.get());
 }
 
 

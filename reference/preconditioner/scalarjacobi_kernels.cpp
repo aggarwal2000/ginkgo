@@ -93,28 +93,17 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_GENERATE_KERNEL);
 
 
 template <typename ValueType>
-void apply(std::shared_ptr<const ReferenceExecutor> exec,
-           const Array<ValueType> &inv_eles,
-           const matrix::Dense<ValueType> *alpha,
-           const matrix::Dense<ValueType> *b,
-           const matrix::Dense<ValueType> *beta,
-           matrix::Dense<ValueType> *x) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_APPLY_KERNEL);
-
-
-template <typename ValueType>
 void simple_apply(std::shared_ptr<const ReferenceExecutor> exec,
                   const Array<ValueType> &inv_eles,
                   const matrix::Dense<ValueType> *b,
                   matrix::Dense<ValueType> *x)
 {
-    std::cout << "Hi" << std::endl;
+    // std::cout << "Hi" << std::endl;
 
     for (size_type i = 0; i < b->get_size()[0]; i++) {
         auto scale_factor = inv_eles.get_const_data()[i];
 
-        std::cout << "Scale factor: " << scale_factor << std::endl;
+        // std::cout << "Scale factor: " << scale_factor << std::endl;
 
         for (size_type j = 0; j < b->get_size()[1]; j++) {
             x->at(i, j) = b->at(i, j) * scale_factor;

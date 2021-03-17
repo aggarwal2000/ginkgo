@@ -68,71 +68,51 @@ namespace scalarjacobi {
 template <typename ValueType>
 void generate(std::shared_ptr<const OmpExecutor> exec,
               const matrix::Csr<ValueType, int32> *system_matrix,
-              Array<ValueType> &inv_eles) GKO_NOT_IMPLEMENTED;
-// {
-//    auto temp = zero<ValueType>();
+              Array<ValueType> &inv_eles)
+{
+    auto temp = zero<ValueType>();
+#pragma omp parallel for
+    for (size_t row_id = 0; row_id < system_matrix->get_size()[0]; row_id++) {
+        temp = zero<ValueType>();
+        for (size_type i = system_matrix->get_const_row_ptrs()[row_id];
+             i < system_matrix->get_const_row_ptrs()[row_id + 1]; i++) {
+            if (system_matrix->get_const_col_idxs()[i] == row_id) {
+                temp = system_matrix->get_const_values()[i];
+                break;
+            }
+        }
 
-//    #pragma omp parallel for
-//    for(size_t row_id  = 0; row_id < system_matrix->get_size()[0]; row_id ++)
-//    {
-//        temp = zero<ValueType>();
-//        for(size_type i = system_matrix->get_const_row_ptrs[row_id]; i <
-//        system_matrix->get_const_row_ptrs[row_id + 1]; i++)
-//        {
-//            if(system_matrix->get_const_col_idxs[i] == row_id)
-//            {
-//                temp = system_matrix->get_const_values[i] ;
-//                break;
-//            }
-//        }
-
-//        if(temp !=  zero<ValueType>())
-//        {
-//             inv_eles[row_id] = one<ValueType>()/temp;
-//        }
-//        else
-//        {
-//            printf("Scalar jacobi preconditioner can't be generated, as there
-//            is a 0 at diagonal position, error: %d , %d ", __LINE__,
-//            __FILE__);
-//        }
-
-//    }
-// }
+        if (temp != zero<ValueType>()) {
+            inv_eles.get_data()[row_id] = one<ValueType>() / temp;
+        } else {
+            printf(
+                "Scalar jacobi preconditioner can't be generated, as there is "
+                "a 0 at diagonal position, error: %d , %s",
+                __LINE__, __FILE__);
+        }
+    }
+}
 
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_GENERATE_KERNEL);
 
 
 template <typename ValueType>
-void apply(std::shared_ptr<const OmpExecutor> exec,
-           const Array<ValueType> &inv_eles,
-           const matrix::Dense<ValueType> *alpha,
-           const matrix::Dense<ValueType> *b,
-           const matrix::Dense<ValueType> *beta,
-           matrix::Dense<ValueType> *x) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_SCALARJACOBI_APPLY_KERNEL);
-
-
-template <typename ValueType>
 void simple_apply(std::shared_ptr<const OmpExecutor> exec,
                   const Array<ValueType> &inv_eles,
                   const matrix::Dense<ValueType> *b,
-                  matrix::Dense<ValueType> *x) GKO_NOT_IMPLEMENTED;
-// {
-//    #pragma omp parallel for
-//    for(size_type i = 0; i < b->get_size()[0] ; i++)
-//    {
-//        auto scale_factor = inv_eles[i];
+                  matrix::Dense<ValueType> *x)
+{
+#pragma omp parallel for
+    for (size_type i = 0; i < b->get_size()[0]; i++) {
+        auto scale_factor = inv_eles.get_const_data()[i];
 
-//        #pragma omp parallel for
-//        for(size_type j = 0; j < b->get_size()[1]; j++)
-//        {
-//            x->at(i,j) = x->at(i,j)*scale_factor;
-//        }
-//    }
-// }
+#pragma omp parallel for
+        for (size_type j = 0; j < b->get_size()[1]; j++) {
+            x->at(i, j) = b->at(i, j) * scale_factor;
+        }
+    }
+}
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(
     GKO_DECLARE_SCALARJACOBI_SIMPLE_APPLY_KERNEL);
