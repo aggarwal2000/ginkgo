@@ -96,7 +96,8 @@ class BatchCsr
       public ConvertibleTo<BatchCsr<next_precision<ValueType>, IndexType>>,
       public BatchReadableFromMatrixData<ValueType, IndexType>,
       public BatchWritableToMatrixData<ValueType, IndexType>,
-      public BatchTransposable {
+      public BatchTransposable,
+      public EnableBatchScaling<ValueType> {
     friend class EnableCreateMethod<BatchCsr>;
     friend class EnablePolymorphicObject<BatchCsr, BatchLinOp>;
     friend class BatchCsr<to_complex<ValueType>, IndexType>;
@@ -140,6 +141,8 @@ public:
     std::unique_ptr<BatchLinOp> transpose() const override;
 
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
+
+    std::unique_ptr<BatchLinOp> batch_scale() const override;
 
     std::vector<std::unique_ptr<unbatch_type>> unbatch() const
     {
