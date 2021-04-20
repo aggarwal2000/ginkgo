@@ -142,8 +142,6 @@ public:
 
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
-    std::unique_ptr<BatchLinOp> batch_scale() const override;
-
     std::vector<std::unique_ptr<unbatch_type>> unbatch() const
     {
         auto exec = this->get_executor();
@@ -304,6 +302,9 @@ protected:
 
     void apply_impl(const BatchLinOp *alpha, const BatchLinOp *b,
                     const BatchLinOp *beta, BatchLinOp *x) const override;
+
+    void batch_scale_impl(const BatchLinOp *left_scale,
+                          const BatchLinOp *right_scale) override;
 
 private:
     Array<value_type> values_;
