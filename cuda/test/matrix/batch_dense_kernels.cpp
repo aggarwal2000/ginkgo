@@ -156,44 +156,39 @@ protected:
 };
 
 
-// TEST_F(BatchDense, SingleVectorCudaScaleIsEquivalentToRef)
-// {
-//    set_up_vector_data(1);
-//    auto result = Mtx::create(ref);
+TEST_F(BatchDense, SingleVectorCudaScaleIsEquivalentToRef)
+{
+    set_up_vector_data(1);
+    auto result = Mtx::create(ref);
 
-//    x->scale(alpha.get());
-//    dx->scale(dalpha.get());
-//    result->copy_from(dx.get());
+    x->scale(alpha.get());
+    dx->scale(dalpha.get());
+    result->copy_from(dx.get());
 
-//    GKO_ASSERT_MTX_NEAR(result, x, 1e-14);
-// }
-
-
-// TEST_F(BatchDense, MultipleVectorCudaScaleIsEquivalentToRef)
-//{
-// TODO (script:batch_dense): change the code imported from matrix/dense if
-// needed
-//    set_up_vector_data(20);
-//
-//    x->scale(alpha.get());
-//    dx->scale(dalpha.get());
-//
-//    GKO_ASSERT_MTX_NEAR(dx, x, 1e-14);
-//}
+    GKO_ASSERT_BATCH_MTX_NEAR(result, x, 1e-14);
+}
 
 
-// TEST_F(BatchDense,
-// MultipleVectorCudaScaleWithDifferentAlphaIsEquivalentToRef)
-//{
-// TODO (script:batch_dense): change the code imported from matrix/dense if
-// needed
-//    set_up_vector_data(20, true);
-//
-//    x->scale(alpha.get());
-//    dx->scale(dalpha.get());
-//
-//    GKO_ASSERT_MTX_NEAR(dx, x, 1e-14);
-//}
+TEST_F(BatchDense, MultipleVectorCudaScaleIsEquivalentToRef)
+{
+    set_up_vector_data(20);
+
+    x->scale(alpha.get());
+    dx->scale(dalpha.get());
+
+    GKO_ASSERT_BATCH_MTX_NEAR(dx, x, 1e-14);
+}
+
+
+TEST_F(BatchDense, MultipleVectorCudaScaleWithDifferentAlphaIsEquivalentToRef)
+{
+    set_up_vector_data(20, true);
+
+    x->scale(alpha.get());
+    dx->scale(dalpha.get());
+
+    GKO_ASSERT_BATCH_MTX_NEAR(dx, x, 1e-14);
+}
 
 
 TEST_F(BatchDense, SingleVectorCudaAddScaledIsEquivalentToRef)
@@ -257,30 +252,26 @@ TEST_F(BatchDense,
 //}
 
 
-// TEST_F(BatchDense, SingleVectorCudaComputeDotIsEquivalentToRef)
-//{
-// TODO (script:batch_dense): change the code imported from matrix/dense if
-// needed
-//    set_up_vector_data(1);
-//
-//    x->compute_dot(y.get(), expected.get());
-//    dx->compute_dot(dy.get(), dresult.get());
-//
-//    GKO_ASSERT_MTX_NEAR(dresult, expected, 1e-14);
-//}
+TEST_F(BatchDense, SingleVectorCudaComputeDotIsEquivalentToRef)
+{
+    set_up_vector_data(1);
+
+    x->compute_dot(y.get(), expected.get());
+    dx->compute_dot(dy.get(), dresult.get());
+
+    GKO_ASSERT_BATCH_MTX_NEAR(dresult, expected, 1e-14);
+}
 
 
-// TEST_F(BatchDense, MultipleVectorCudaComputeDotIsEquivalentToRef)
-//{
-// TODO (script:batch_dense): change the code imported from matrix/dense if
-// needed
-//    set_up_vector_data(20);
-//
-//    x->compute_dot(y.get(), expected.get());
-//    dx->compute_dot(dy.get(), dresult.get());
-//
-//    GKO_ASSERT_MTX_NEAR(dresult, expected, 1e-14);
-//}
+TEST_F(BatchDense, MultipleVectorCudaComputeDotIsEquivalentToRef)
+{
+    set_up_vector_data(20);
+
+    x->compute_dot(y.get(), expected.get());
+    dx->compute_dot(dy.get(), dresult.get());
+
+    GKO_ASSERT_BATCH_MTX_NEAR(dresult, expected, 1e-14);
+}
 
 
 TEST_F(BatchDense, CudaComputeNorm2IsEquivalentToRef)
