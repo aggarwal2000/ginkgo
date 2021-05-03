@@ -102,3 +102,83 @@ private:
     ValueType *const __restrict__ work_;
     const gko::batch_csr::BatchEntry<const ValueType> &matrix_;
 };
+
+
+template <typename ValueType>
+class BatchScalarJacobi final {
+public:
+    /**
+     * The size of the work vector required in case of static allocation.
+     */
+    static constexpr int shared_vals_work_size =
+        batch_config<ValueType>::max_num_rows;
+    static constexpr int shared_idxs_work_size = 1;
+    /**
+     * The size of the work vector required in case of dynamic allocation.
+     *
+     * For the Jacobi preconditioner, this is unnecessary, but this function is
+     * part of a 'batch preconditioner interface' because other preconditioners
+     * may need it.
+     */
+    static constexpr int dynamic_shared_vals_work_size(int, int)
+    {
+        return batch_config<ValueType>::max_num_rows;
+    }
+
+    static constexpr int dynamic_shared_idxs_work_size(int, int) { return 1; }
+
+    __host__ __inline__ BatchScalarJacobi(
+        std::shared_ptr<const CudaExecutor> exec,
+        const gko::batch_csr::UniformBatch<const ValueType> &mat_batch)
+        : uni_mat_batch_{mat_batch}
+    {}
+
+    __device__ __forceinline__ void generate(
+        const gko::batch_csr::BatchEntry<const ValueType> &mat,
+        ValueType *const __restrict__ shared_work_vals,
+        int *const __restrict__ shared_work_idxs)
+    {
+        matrix_entry_ = mat;
+        shared_work_vals_entry_ = shared_work_vals;
+        shared_work_idxs_entry_ = shared_work_idxs;
+
+        constexpr auto warp_size = config::warp_size;
+        const auto tile =
+            group::tiled_partition<warp_size>(group::this_thread_block());
+        const int tile_rank = threadIdx.x / warp_size;
+        const int num_tiles = (blockDim.x - 1) / warp_size + 1;
+        for (int irow = tile_rank; irow < matrix_entry_.num_rows;
+             irow += num_tiles) {
+            for (int j = matrix_entry_.row_ptrs[irow] + tile.thread_rank();
+                 j < matrix_entry_.row_ptrs[irow + 1]; j += warp_size) {
+                if (matrix_entry_.col_idxs[j] == irow) {
+                    shared_work_vals_entry_[irow] =
+                        one<ValueType>() / matrix_entry_.values[j];
+                }
+            }
+        }
+    }
+
+    __device__ __forceinline__ void apply(
+        const gko::batch_dense::BatchEntry<const ValueType> &r,
+        const gko::batch_dense::BatchEntry<ValueType> &z) const
+    {
+        for (int i = threadIdx.x; i < matrix_entry_.num_rows * r.num_rhs;
+             i += blockDim.x) {
+            const int row = i / r.num_rhs;
+            const int col = i % r.num_rhs;
+            z.values[row * z.stride + col] =
+                shared_work_vals_entry_[row] * r.values[row * r.stride + col];
+        }
+    }
+
+private:
+    // Note: It is mandatory to have these 4 data members in any preconditioner
+    // implementation.
+    ValueType *__restrict__ shared_work_vals_entry_ = nullptr;
+    int *__restrict__ shared_work_idxs_entry_ = nullptr;
+    gko::batch_csr::BatchEntry<const ValueType> matrix_entry_;
+    const gko::batch_csr::UniformBatch<const ValueType> uni_mat_batch_;
+
+    // Rest of the data members. --Not needed in case of scalar jacobi.
+};

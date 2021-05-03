@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ginkgo/core/preconditioner/batch_preconditioner_strings.hpp>
 #include <ginkgo/core/stop/batch_stop_enum.hpp>
 
+#include "core/matrix/batch_struct.hpp"
 #include "cuda/base/config.hpp"
 #include "cuda/base/types.hpp"
 #include "cuda/components/cooperative_groups.cuh"
@@ -64,6 +65,7 @@ namespace batch_bicgstab {
 #include "common/log/batch_logger.hpp.inc"
 #include "common/matrix/batch_csr_kernels.hpp.inc"
 #include "common/matrix/batch_dense_kernels.hpp.inc"
+#include "common/preconditioner/batch_block_jacobi.hpp.inc"
 #include "common/preconditioner/batch_identity.hpp.inc"
 #include "common/preconditioner/batch_jacobi.hpp.inc"
 #include "common/stop/batch_criteria.hpp.inc"
@@ -90,17 +92,46 @@ static void apply_impl(
     const size_type nbatch = a.num_batch;
 
     if (opts.preconditioner == gko::preconditioner::batch::jacobi_str) {
-        apply_kernel<BatchJacobi<ValueType>,
-                     stop::AbsAndRelResidualMaxIter<ValueType>>
-            <<<nbatch, default_block_size>>>(
-                opts.max_its, opts.abs_residual_tol, opts.rel_residual_tol,
-                opts.tol_type, logger, a, left, right, b, x);
+        GKO_NOT_IMPLEMENTED;
+        // apply_kernel<BatchJacobi<ValueType>,
+        //              stop::AbsAndRelResidualMaxIter<ValueType>>
+        //     <<<nbatch, default_block_size>>>(
+        //         opts.max_its, opts.abs_residual_tol, opts.rel_residual_tol,
+        //         opts.tol_type, logger, a, left, right, b, x);
     } else if (opts.preconditioner == gko::preconditioner::batch::none_str) {
-        apply_kernel<BatchIdentity<ValueType>,
+        // apply_kernel<BatchIdentity<ValueType>,
+        //              stop::AbsAndRelResidualMaxIter<ValueType>>
+        //     <<<nbatch, default_block_size>>>(
+        //         opts.max_its, opts.abs_residual_tol, opts.rel_residual_tol,
+        //         opts.tol_type, logger, a, left, right, b, x);
+        GKO_NOT_IMPLEMENTED;
+
+    } else if (opts.preconditioner ==
+               gko::preconditioner::batch::scalar_jacobi_str) {
+        BatchScalarJacobi<ValueType> scalar_jacobi_precond(
+            exec, gko::batch::to_const(a));
+
+        apply_kernel<BatchScalarJacobi<ValueType>,
                      stop::AbsAndRelResidualMaxIter<ValueType>>
             <<<nbatch, default_block_size>>>(
                 opts.max_its, opts.abs_residual_tol, opts.rel_residual_tol,
-                opts.tol_type, logger, a, left, right, b, x);
+                opts.tol_type, logger, scalar_jacobi_precond, a, left, right, b,
+                x);
+
+    } else if (opts.preconditioner ==
+               gko::preconditioner::batch::block_jacobi_str) {
+        Array<int> global_precond_idxs_work_arr(exec);
+
+        BatchBlockJacobi<ValueType> block_jacobi_precond(
+            exec, gko::batch::to_const(a), global_precond_idxs_work_arr);
+
+        apply_kernel<BatchBlockJacobi<ValueType>,
+                     stop::AbsAndRelResidualMaxIter<ValueType>>
+            <<<nbatch, default_block_size>>>(
+                opts.max_its, opts.abs_residual_tol, opts.rel_residual_tol,
+                opts.tol_type, logger, block_jacobi_precond, a, left, right, b,
+                x);
+
     } else {
         GKO_NOT_IMPLEMENTED;
     }

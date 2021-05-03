@@ -77,10 +77,10 @@ protected:
 
     const size_t nbatch = 2;
     const int nrows = 3;
-    const Options opts_1{"none", 10, 1e-6, 1e-11,
+    const Options opts_1{"block_jacobi", 10, 1e-6, 1e-11,
                          gko::stop::batch::ToleranceType::absolute};
     const int nrhs = 2;
-    const Options opts_m{"none", 10, 1e-6, 1e-11,
+    const Options opts_m{"scalar_jacobi", 10, 1e-6, 1e-11,
                          gko::stop::batch::ToleranceType::absolute};
 
 
@@ -366,7 +366,7 @@ TYPED_TEST(BatchBicgstab, CoreSolvesSystemJacobi)
         Solver::build()
             .with_max_iterations(100)
             .with_rel_residual_tol(1e-6f)
-            .with_preconditioner("jacobi")
+            .with_preconditioner("scalar_jacobi")
             .with_tolerance_type(gko::stop::batch::ToleranceType::relative)
             .on(useexec);
     const int nrhs_1 = 1;

@@ -41,6 +41,8 @@ namespace batch {
 
 const char none_str[] = "none";
 const char jacobi_str[] = "jacobi";
+const char scalar_jacobi_str[] = "scalar_jacobi";
+const char block_jacobi_str[] = "block_jacobi";
 
 
 inline bool is_valid_preconditioner_string(const std::string preconditioner)
@@ -48,6 +50,10 @@ inline bool is_valid_preconditioner_string(const std::string preconditioner)
     if (preconditioner == none_str) {
         return true;
     } else if (preconditioner == jacobi_str) {
+        return true;
+    } else if (preconditioner == scalar_jacobi_str) {
+        return true;
+    } else if (preconditioner == block_jacobi_str) {
         return true;
     }
     return false;

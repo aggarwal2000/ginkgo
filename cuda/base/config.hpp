@@ -91,6 +91,12 @@ struct batch_config {
 };
 
 
+template <typename ValueType>
+struct batch_block_jacobi_config {
+    static constexpr int max_blocks_arr_size = 500;
+};
+
+
 }  // namespace cuda
 }  // namespace kernels
 }  // namespace gko
