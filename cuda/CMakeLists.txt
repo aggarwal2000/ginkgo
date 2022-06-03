@@ -117,6 +117,7 @@ target_sources(ginkgo_cuda
     matrix/sellp_kernels.cu
     matrix/sparsity_csr_kernels.cu
     preconditioner/batch_identity_kernels.cu
+    preconditioner/batch_exact_ilu_kernels.cu
     preconditioner/batch_ilu_kernels.cu
     preconditioner/batch_jacobi_kernels.cu
     preconditioner/isai_kernels.cu

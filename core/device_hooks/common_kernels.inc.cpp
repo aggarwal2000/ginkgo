@@ -66,6 +66,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/matrix/sellp_kernels.hpp"
 #include "core/matrix/sparsity_csr_kernels.hpp"
 #include "core/multigrid/amgx_pgm_kernels.hpp"
+#include "core/preconditioner/batch_exact_ilu_kernels.hpp"
 #include "core/preconditioner/batch_identity_kernels.hpp"
 #include "core/preconditioner/batch_ilu_kernels.hpp"
 #include "core/preconditioner/batch_jacobi_kernels.hpp"
@@ -712,6 +713,8 @@ GKO_STUB_VALUE_AND_INDEX_TYPE(GKO_DECLARE_CSR_ADD_SCALED_IDENTITY_KERNEL);
 GKO_STUB_VALUE_AND_INDEX_TYPE(
     GKO_DECLARE_CSR_COMPUTE_SUB_MATRIX_FROM_INDEX_SET_KERNEL);
 
+GKO_STUB_VALUE_AND_INDEX_TYPE(GKO_DECLARE_CSR_FIND_DIAGONAL_ENTRIES_LOCATIONS);
+
 template <typename ValueType, typename IndexType>
 GKO_DECLARE_CSR_SCALE_KERNEL(ValueType, IndexType)
 GKO_NOT_COMPILED(GKO_HOOK_MODULE);
@@ -1165,6 +1168,18 @@ GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_ILU_SPLIT_APPLY_KERNEL);
 
 
 }  // namespace batch_ilu
+
+
+// TODO (script:batch_exact_ilu): adapt this block as needed
+namespace batch_exact_ilu {
+
+
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_EXACT_ILU_GENERATE_KERNEL);
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_EXACT_ILU_APPLY_KERNEL);
+
+
+}  // namespace batch_exact_ilu
 
 
 namespace batch_identity {

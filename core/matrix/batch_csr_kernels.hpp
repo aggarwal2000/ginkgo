@@ -133,6 +133,7 @@ namespace kernels {
         std::shared_ptr<const DefaultExecutor> exec,                  \
         const matrix::BatchCsr<ValueType, IndexType>* mtx, bool& all_diags)
 
+
 #define GKO_DECLARE_BATCH_CSR_ADD_SCALED_IDENTITY_KERNEL(ValueType, IndexType) \
     void add_scaled_identity(std::shared_ptr<const DefaultExecutor> exec,      \
                              const matrix::BatchDense<ValueType>* a,           \

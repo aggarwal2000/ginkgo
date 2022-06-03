@@ -1123,6 +1123,16 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(
     GKO_DECLARE_CSR_ADD_SCALED_IDENTITY_KERNEL);
 
 
+template <typename ValueType, typename IndexType>
+void find_diagonal_entries_locations(
+    std::shared_ptr<const ReferenceExecutor> exec,
+    const matrix::Csr<ValueType, IndexType>* const mtx,
+    IndexType* diag_locs) GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(
+    GKO_DECLARE_CSR_FIND_DIAGONAL_ENTRIES_LOCATIONS);
+
+
 }  // namespace csr
 }  // namespace reference
 }  // namespace kernels
