@@ -291,7 +291,7 @@ namespace kernels {
     template <typename ValueType, typename IndexType>                      \
     GKO_DECLARE_CSR_ADD_SCALED_IDENTITY_KERNEL(ValueType, IndexType);      \
     template <typename ValueType, typename IndexType>                      \
-    GKO_DECLARE_CSR_FIND_DIAGONAL_ENTRIES_LOCATIONS(ValueType, IndexType);
+    GKO_DECLARE_CSR_FIND_DIAGONAL_ENTRIES_LOCATIONS(ValueType, IndexType)
 
 
 GKO_DECLARE_FOR_ALL_EXECUTOR_NAMESPACES(csr, GKO_DECLARE_ALL_AS_TEMPLATES);

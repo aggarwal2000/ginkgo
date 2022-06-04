@@ -110,6 +110,7 @@ void BatchExactIlu<ValueType, IndexType>::generate(
         first_csr.get(),
         diag_locations_.get_data()));  // TODO: Implement this for cuda backend
     exec->run(batch_exact_ilu::make_generate_exact_ilu0(
+        diag_locations_.get_const_data(),
         factorized_mat_.get()));  // TODO: Implement this for cuda backend
 }
 

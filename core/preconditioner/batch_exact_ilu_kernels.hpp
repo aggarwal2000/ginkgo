@@ -59,6 +59,7 @@ namespace kernels {
 #define GKO_DECLARE_BATCH_EXACT_ILU_GENERATE_KERNEL(ValueType, IndexType) \
     void generate_exact_ilu0(                                             \
         std::shared_ptr<const DefaultExecutor> exec,                      \
+        const IndexType* diag_locs,                                       \
         matrix::BatchCsr<ValueType, IndexType>* factorized_mat)
 
 #define GKO_DECLARE_BATCH_EXACT_ILU_APPLY_KERNEL(ValueType, IndexType)      \

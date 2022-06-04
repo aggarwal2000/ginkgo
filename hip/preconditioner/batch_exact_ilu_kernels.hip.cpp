@@ -51,15 +51,14 @@ namespace {
 constexpr size_type default_block_size = 256;
 
 
-//#include "common/cuda_hip/preconditioner/batch_exact_ilu.hpp.inc"
-#include "common/cuda_hip/preconditioner/batch_trsv.hpp.inc"
-
+#include "common/cuda_hip/preconditioner/batch_exact_ilu_kernels.hpp.inc"
 
 }  // namespace
 
 
 template <typename ValueType, typename IndexType>
 void generate_exact_ilu0(std::shared_ptr<const DefaultExecutor> exec,
+                         const IndexType* const diag_locs,
                          matrix::BatchCsr<ValueType, IndexType>* const
                              factorized_mat) GKO_NOT_IMPLEMENTED;
 

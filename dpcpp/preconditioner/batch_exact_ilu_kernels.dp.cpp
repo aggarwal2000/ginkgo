@@ -47,6 +47,7 @@ namespace batch_exact_ilu {
 
 template <typename ValueType, typename IndexType>
 void generate_exact_ilu0(std::shared_ptr<const DefaultExecutor> exec,
+                         const IndexType* const diag_locs,
                          matrix::BatchCsr<ValueType, IndexType>* const
                              factorized_mat) GKO_NOT_IMPLEMENTED;
 
