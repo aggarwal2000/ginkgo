@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GKO_CORE_SOLVER_BATCH_DISPATCH_HPP_
 #define GKO_CORE_SOLVER_BATCH_DISPATCH_HPP_
 
-
+#include <ginkgo/core/preconditioner/batch_exact_ilu.hpp>
 #include <ginkgo/core/preconditioner/batch_ilu.hpp>
 #include <ginkgo/core/preconditioner/batch_isai.hpp>
 #include <ginkgo/core/preconditioner/batch_jacobi.hpp>
@@ -100,6 +100,7 @@ using DeviceValueType = ValueType;
 
 #include "reference/log/batch_logger.hpp"
 #include "reference/matrix/batch_struct.hpp"
+#include "reference/preconditioner/batch_exact_ilu.hpp"
 #include "reference/preconditioner/batch_identity.hpp"
 #include "reference/preconditioner/batch_ilu.hpp"
 #include "reference/preconditioner/batch_jacobi.hpp"
@@ -225,6 +226,16 @@ public:
                 // TODO: Implement other batch TRSV types
                 GKO_NOT_IMPLEMENTED;
             }
+        } else if (auto prec = dynamic_cast<
+                       const preconditioner::BatchExactIlu<value_type>*>(
+                       precon_)) {
+            auto factorized_mat =
+                device::get_batch_struct(prec->get_const_factorized_mat());
+            auto diag_info = prec->get_const_diag_locations();
+            dispatch_on_stop(logger, amat,
+                             device::batch_exact_ilu0<device_value_type>(
+                                 factorized_mat, diag_info),
+                             b_b, x_b);
         } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
             auto approx_inv =

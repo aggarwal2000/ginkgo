@@ -78,10 +78,18 @@ void BatchExactIlu<ValueType, IndexType>::generate(
 
     std::shared_ptr<const matrix_type> sys_csr_smart(sys_csr);
 
-
     const auto nbatch = sys_csr->get_num_batch_entries();
     const auto nrows = sys_csr->get_size().at(0)[0];
     const auto nnz = sys_csr->get_num_stored_elements() / nbatch;
+
+
+    if (parameters_.skip_sorting == false) {
+        std::shared_ptr<matrix_type> temp_sys_csr_smart =
+            gko::clone(this->get_executor(), sys_csr_smart);
+        temp_sys_csr_smart->sort_by_column_index();
+        sys_csr_smart = temp_sys_csr_smart;
+    }
+
 
     // extract the first matrix, as a view, into a regular Csr matrix.
     const auto unbatch_size = gko::dim<2>{nrows, sys_csr->get_size().at(0)[1]};
