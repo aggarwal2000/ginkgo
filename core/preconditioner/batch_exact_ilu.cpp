@@ -106,12 +106,10 @@ void BatchExactIlu<ValueType, IndexType>::generate(
     this->factorized_mat_ = gko::clone(this->get_executor(), sys_csr_smart);
     this->diag_locations_ = gko::Array<index_type>(this->get_executor(), nrows);
 
-    exec->run(batch_exact_ilu::make_find_diag_locs(
-        first_csr.get(),
-        diag_locations_.get_data()));  // TODO: Implement this for cuda backend
+    exec->run(batch_exact_ilu::make_find_diag_locs(first_csr.get(),
+                                                   diag_locations_.get_data()));
     exec->run(batch_exact_ilu::make_generate_exact_ilu0(
-        diag_locations_.get_const_data(),
-        factorized_mat_.get()));  // TODO: Implement this for cuda backend
+        diag_locations_.get_const_data(), factorized_mat_.get()));
 }
 
 
