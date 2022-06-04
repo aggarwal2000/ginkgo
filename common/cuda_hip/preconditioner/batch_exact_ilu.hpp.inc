@@ -30,6 +30,88 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
+/*
+template <typename ValueType>
+__device__ __forceinline__ void legacy_sparse_lower_trsv_combined(
+    const int num_rows, const int* const __restrict__ row_ptrs,
+    const int* const __restrict__ col_idxs,
+    const ValueType* const __restrict__ factored_values_entry,
+    const int* const __restrict__ diag_info,
+    const ValueType* const __restrict__ vec,
+    volatile ValueType* __restrict__ const temp_vec)
+{
+    const int row_index = threadIdx.x;
+
+    if (row_index >= num_rows) {
+        return;
+    }
+
+    ValueType sum = 0;
+
+    const int start = row_ptrs[row_index];
+    const int end = diag_info[row_index];
+
+    int i = start;
+
+    bool completed = false;
+
+    while (!completed) {
+        const int col_index = col_idxs[i];
+
+        if (i < end && isfinite(temp_vec[col_index])) {
+            sum += factored_values_entry[i] * temp_vec[col_index];
+            i++;
+        }
+
+        if (i == end) {
+            temp_vec[row_index] =
+                (vec[row_index] - sum) /
+                1;  // 1 in place of factored_values_entry[end]
+
+            completed = true;
+        }
+    }
+}
+
+template <typename ValueType>
+__device__ __forceinline__ void legacy_sparse_upper_trsv_combined(
+    const int num_rows, const int* const __restrict__ row_ptrs,
+    const int* const __restrict__ col_idxs,
+    const ValueType* const __restrict__ factored_values_entry,
+    const int* const __restrict__ diag_info,
+    volatile const ValueType* const __restrict__ temp_vec,
+    volatile ValueType* const __restrict__ vec_hat)
+{
+    const int row_index = threadIdx.x;
+
+    if (row_index >= num_rows) {
+        return;
+    }
+
+    ValueType sum = 0;
+
+    const int start = diag_info[row_index];
+    const int end = row_ptrs[row_index + 1] - 1;
+    int i = end;
+
+    bool completed = false;
+
+    while (!completed) {
+        const int col_index = col_idxs[i];
+
+        if (i > start && isfinite(vec_hat[col_index])) {
+            sum += factored_values_entry[i] * vec_hat[col_index];
+            i--;
+        }
+
+        if (i == start) {
+            vec_hat[row_index] =
+                (temp_vec[row_index] - sum) / factored_values_entry[start];
+            completed = true;
+        }
+    }
+}
+*/
 
 /**
  * Batch exact ilu0 preconditioner class.
@@ -94,11 +176,47 @@ public:
         work_ = work;
     }
 
-    __device__ __forceinline__ void apply(int, const ValueType* const r,
-                                          ValueType* const z) const
+    __device__ __forceinline__ void apply(
+        const int num_rows, const ValueType* const __restrict__ r,
+        volatile ValueType* const __restrict__ z) const
     {
-        // TODO: Implement special trsv for combined form (this uses the work
-        // array)
+        /*
+        // vec_hat = precond * vec
+        // => L * U  * vec_hat = vec
+        // => L * y = vec , find y , and then U * vec_hat = y, find vec_hat
+
+        // sparse triangular solves
+
+        // if we want to use the busy waiting while loop approach, then the
+        // num_rows should be <= threadblock size, else there is possibility of
+        // a deadlock!
+        assert(num_rows <= blockDim.x);
+        // TODO: For upper trsv, use thread 0 for the bottommost row, this way
+        // we could avoid :  assert(num_rows <= blockDim.x), as there won't be a
+        // possibility of deadlock then!
+
+        volatile ValueType* __restrict__ temp_vec = work_;
+
+        for (int i = threadIdx.x; i < num_rows; i += blockDim.x) {
+            temp_vec[i] = 1.8 / 0;  // TODO: find a better way to deal with
+                                    // this!
+            z[i] = 1.1 / 0;
+        }
+
+        __syncthreads();
+
+        legacy_sparse_lower_trsv_combined(
+            num_rows, factored_mat_entry_.row_ptrs,
+            factored_mat_entry_.col_idxs, factored_mat_entry_.values,
+            diag_ptrs_csr_, r, temp_vec);
+
+        __syncthreads();
+
+        legacy_sparse_upper_trsv_combined(
+            num_rows, factored_mat_entry_.row_ptrs,
+            factored_mat_entry_.col_idxs, factored_mat_entry_.values,
+            diag_ptrs_csr_, temp_vec, z);
+        */
     }
 
 
