@@ -194,8 +194,9 @@ protected:
                     const BatchLinOp* beta, BatchLinOp* x) const override{};
 
 private:
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> l_left_isai_;
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> u_left_isai_;
+    // Note: Make these two const to avoid cloning the isai precond's approx inv
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>> l_left_isai_;
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>> u_left_isai_;
     std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> mult_inv_;
 };
 
