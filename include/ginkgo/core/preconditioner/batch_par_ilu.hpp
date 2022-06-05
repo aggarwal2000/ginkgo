@@ -96,14 +96,16 @@ public:
 
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
-    const matrix::BatchCsr<ValueType, IndexType>* get_const_lower_factor() const
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+    get_const_lower_factor() const
     {
-        return l_factor_.get();
+        return l_factor_;
     }
 
-    const matrix::BatchCsr<ValueType, IndexType>* get_const_upper_factor() const
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+    get_const_upper_factor() const
     {
-        return u_factor_.get();
+        return u_factor_;
     }
 
 protected:

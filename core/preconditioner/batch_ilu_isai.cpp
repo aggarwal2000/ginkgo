@@ -82,10 +82,8 @@ void BatchIluIsai<ValueType, IndexType>::generate(
                 .with_num_sweeps(parameters_.par_ilu_num_sweeps)
                 .on(exec)
                 ->generate(sys_csr_smart);
-        l_factor = std::shared_ptr<const batch_csr>(
-            parilu_precond->get_const_lower_factor());
-        u_factor = std::shared_ptr<const batch_csr>(
-            parilu_precond->get_const_upper_factor());
+        l_factor = parilu_precond->get_const_lower_factor();
+        u_factor = parilu_precond->get_const_upper_factor();
     } else {
         auto exact_ilu_precond =
             gko::preconditioner::BatchExactIlu<ValueType, IndexType>::build()
@@ -94,8 +92,7 @@ void BatchIluIsai<ValueType, IndexType>::generate(
                 ->generate(sys_csr_smart);
 
         std::shared_ptr<const batch_csr> factored_mat =
-            std::shared_ptr<const batch_csr>(
-                exact_ilu_precond->get_const_factorized_mat());
+            exact_ilu_precond->get_const_factorized_mat();
 
         // TODO:Split factors
         GKO_NOT_IMPLEMENTED;
@@ -118,15 +115,9 @@ void BatchIluIsai<ValueType, IndexType>::generate(
             .on(exec)
             ->generate(u_factor);
 
-    const batch_csr* lower_inv =
-        lower_isai_precond->get_const_left_approximate_inverse();
-    const batch_csr* upper_inv =
-        upper_isai_precond->get_const_left_approximate_inverse();
+    l_left_isai_ = lower_isai_precond->get_const_left_approximate_inverse();
+    u_left_isai_ = upper_isai_precond->get_const_left_approximate_inverse();
 
-    l_left_isai_ = std::shared_ptr<const batch_csr>(lower_inv);
-    u_left_isai_ = std::shared_ptr<const batch_csr>(upper_inv);
-
-    std::shared_ptr<batch_csr> multipilcation_inv;
 
     if (parameters_.perform_inv_factors_batch_spgemm) {
         GKO_NOT_IMPLEMENTED;

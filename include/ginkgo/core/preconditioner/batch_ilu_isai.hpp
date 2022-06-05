@@ -128,23 +128,23 @@ public:
 
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
-    const matrix::BatchCsr<ValueType, IndexType>*
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
     get_const_lower_factor_left_approx_inverse() const
     {
-        return l_left_isai_.get();
+        return l_left_isai_;
     }
 
-    const matrix::BatchCsr<ValueType, IndexType>*
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
     get_const_upper_factor_left_approx_inverse() const
     {
-        return u_left_isai_.get();
+        return u_left_isai_;
     }
 
     // u_left_isai_ * l_left_isai_
-    const matrix::BatchCsr<ValueType, IndexType>*
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
     get_const_u_left_isai_mult_l_left_isai() const
     {
-        return mult_inv_.get();
+        return mult_inv_;
     }
 
     bool get_is_inv_factors_batch_spgemm_performed() const

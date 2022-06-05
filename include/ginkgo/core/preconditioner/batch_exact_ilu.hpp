@@ -91,10 +91,10 @@ public:
 
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
-    const matrix::BatchCsr<ValueType, IndexType>* get_const_factorized_mat()
-        const
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+    get_const_factorized_mat() const
     {
-        return factorized_mat_.get();
+        return factorized_mat_;
     }
 
     const index_type* get_const_diag_locations() const

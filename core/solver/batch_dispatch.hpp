@@ -234,8 +234,8 @@ public:
         else if (auto prec = dynamic_cast<
                      const preconditioner::BatchExactIlu<value_type>*>(
                      precon_)) {
-            const auto factorized_mat =
-                device::get_batch_struct(prec->get_const_factorized_mat());
+            const auto factorized_mat = device::get_batch_struct(
+                prec->get_const_factorized_mat().get());
             const auto diag_info = prec->get_const_diag_locations();
             dispatch_on_stop(logger, amat,
                              device::batch_exact_ilu0<device_value_type>(
@@ -245,9 +245,9 @@ public:
                        const preconditioner::BatchParIlu<value_type>*>(
                        precon_)) {
             const auto l_factor =
-                device::get_batch_struct(prec->get_const_lower_factor());
+                device::get_batch_struct(prec->get_const_lower_factor().get());
             const auto u_factor =
-                device::get_batch_struct(prec->get_const_upper_factor());
+                device::get_batch_struct(prec->get_const_upper_factor().get());
 
             dispatch_on_stop(
                 logger, amat,
@@ -257,11 +257,11 @@ public:
                        const preconditioner::BatchIluIsai<value_type>*>(
                        precon_)) {
             const auto l_left_isai = device::get_batch_struct(
-                prec->get_const_lower_factor_left_approx_inverse());
+                prec->get_const_lower_factor_left_approx_inverse().get());
             const auto u_left_isai = device::get_batch_struct(
-                prec->get_const_upper_factor_left_approx_inverse());
+                prec->get_const_upper_factor_left_approx_inverse().get());
             const auto mult_inv = device::get_batch_struct(
-                prec->get_const_u_left_isai_mult_l_left_isai());
+                prec->get_const_u_left_isai_mult_l_left_isai().get());
             const auto is_mult_inv_valid =
                 prec->get_is_inv_factors_batch_spgemm_performed();
             // TODO: Define device preconditioners, add the includes to files
@@ -271,7 +271,7 @@ public:
         } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
             const auto left_approx_inv = device::get_batch_struct(
-                prec->get_const_left_approximate_inverse());
+                prec->get_const_left_approximate_inverse().get());
             // TODO: Define device preconditioners, add the includes to files
             //  like cuda/preconditioner/batch_preconditioners.cuh, and add a
             //  dispatch.

@@ -108,10 +108,10 @@ public:
 
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
-    const matrix::BatchCsr<ValueType, IndexType>*
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
     get_const_left_approximate_inverse() const
     {
-        return left_isai_.get();
+        return left_isai_;
     }
 
 protected:
@@ -155,7 +155,7 @@ protected:
                     const BatchLinOp* beta, BatchLinOp* x) const override{};
 
 private:
-    std::unique_ptr<matrix::BatchCsr<ValueType, IndexType>> left_isai_;
+    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> left_isai_;
 };
 
 
