@@ -221,7 +221,7 @@ public:
 
 
 private:
-    gko::batch_csr::UniformBatch<const value_type> factored_mat_batch_;
+    const gko::batch_csr::UniformBatch<const value_type> factored_mat_batch_;
     const int* __restrict__ const diag_ptrs_csr_;
     gko::batch_csr::BatchEntry<const value_type> factored_mat_entry_;
     ValueType* __restrict__ work_;

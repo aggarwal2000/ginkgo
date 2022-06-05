@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ginkgo/core/preconditioner/batch_ilu.hpp>
 #include <ginkgo/core/preconditioner/batch_isai.hpp>
 #include <ginkgo/core/preconditioner/batch_jacobi.hpp>
+#include <ginkgo/core/preconditioner/batch_par_ilu.hpp>
 
 
 #include "core/log/batch_logging.hpp"
@@ -104,6 +105,7 @@ using DeviceValueType = ValueType;
 #include "reference/preconditioner/batch_identity.hpp"
 #include "reference/preconditioner/batch_ilu.hpp"
 #include "reference/preconditioner/batch_jacobi.hpp"
+#include "reference/preconditioner/batch_par_ilu.hpp"
 #include "reference/preconditioner/batch_trsv.hpp"
 #include "reference/stop/batch_criteria.hpp"
 
@@ -236,6 +238,18 @@ public:
                              device::batch_exact_ilu0<device_value_type>(
                                  factorized_mat, diag_info),
                              b_b, x_b);
+        } else if (auto prec = dynamic_cast<
+                       const preconditioner::BatchParIlu<value_type>*>(
+                       precon_)) {
+            auto l_factor =
+                device::get_batch_struct(prec->get_const_lower_factor());
+            auto u_factor =
+                device::get_batch_struct(prec->get_const_upper_factor());
+
+            dispatch_on_stop(
+                logger, amat,
+                device::batch_parilu0<device_value_type>(l_factor, u_factor),
+                b_b, x_b);
         } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
             auto approx_inv =
