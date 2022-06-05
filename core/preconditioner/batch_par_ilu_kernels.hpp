@@ -72,7 +72,7 @@ namespace kernels {
         const matrix::BatchCsr<ValueType, IndexType>* sys_mat,                 \
         matrix::BatchCsr<ValueType, IndexType>* l_factor,                      \
         matrix::BatchCsr<ValueType, IndexType>* u_factor,                      \
-        const int num_sweeps, const IndexType* dependecies,                    \
+        const int num_sweeps, const IndexType* dependencies,                   \
         const IndexType* nz_ptrs)
 
 

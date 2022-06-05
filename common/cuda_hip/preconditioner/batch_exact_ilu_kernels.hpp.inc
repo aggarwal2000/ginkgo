@@ -111,14 +111,15 @@ __device__ __forceinline__ void modify_rows_below_curr_row(
 
 
 template <typename ValueType>
-__global__ void generate_exact_ilu0_kernel(
-    const size_type batch_size, const int nrows, const int nnz,
-    const int* const __restrict__ diag_ptrs,
-    const int* const __restrict__ mat_row_ptrs,
-    const int* const __restrict__ mat_col_idxs,
-    ValueType* const __restrict__ mat_values)
+__global__
+    __launch_bounds__(default_block_size) void generate_exact_ilu0_kernel(
+        const size_type batch_size, const int nrows, const int nnz,
+        const int* const __restrict__ diag_ptrs,
+        const int* const __restrict__ mat_row_ptrs,
+        const int* const __restrict__ mat_col_idxs,
+        ValueType* const __restrict__ mat_values)
 {
-    for (int batch_id = blockIdx.x; batch_id < batch_size;
+    for (size_type batch_id = blockIdx.x; batch_id < batch_size;
          batch_id += gridDim.x) {
         // Tried out-> Having stuff (mat-row_ptrs, col_idxs, vals and diag_locs)
         // in shared memory slows down the kernel, so don't copy global arrays

@@ -85,7 +85,7 @@ void compute_par_ilu0(
     const matrix::BatchCsr<ValueType, IndexType>* const sys_mat,
     matrix::BatchCsr<ValueType, IndexType>* const l_factor,
     matrix::BatchCsr<ValueType, IndexType>* const u_factor,
-    const int num_sweeps, const IndexType* const dependecies,
+    const int num_sweeps, const IndexType* const dependencies,
     const IndexType* const nz_ptrs) GKO_NOT_IMPLEMENTED;
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
