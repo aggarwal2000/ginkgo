@@ -48,7 +48,7 @@ namespace preconditioner {
 
 
 /**
- * A batch of exact ILU(0) factor preconditioners for a batch of matrices.
+ * A batch of parILU(0) factor preconditioners for a batch of matrices.
  *
  * @tparam ValueType  precision of matrix elements
  *
@@ -84,7 +84,7 @@ public:
         bool GKO_FACTORY_PARAMETER_SCALAR(skip_sorting, false);
 
         /**
-         * Number of sweeps for parILU0 generation
+         * Number of sweeps for parIlu0
          *
          */
         int GKO_FACTORY_PARAMETER_SCALAR(num_sweeps, 3);
@@ -92,10 +92,9 @@ public:
     GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchParIlu, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
 
-    std::unique_ptr<BatchLinOp> transpose() const override GKO_NOT_IMPLEMENTED;
+    std::unique_ptr<BatchLinOp> transpose() const override;
 
-    std::unique_ptr<BatchLinOp> conj_transpose() const override
-        GKO_NOT_IMPLEMENTED;
+    std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
     const matrix::BatchCsr<ValueType, IndexType>* get_const_lower_factor() const
     {
@@ -141,7 +140,7 @@ protected:
      * @param system_matrix  the source matrix used to generate the
      *                       preconditioner
      */
-    void generate(const BatchLinOp* system_matrix) GKO_NOT_IMPLEMENTED;
+    void generate(const BatchLinOp* system_matrix);
 
     void apply_impl(const BatchLinOp* b, BatchLinOp* x) const override{};
 
