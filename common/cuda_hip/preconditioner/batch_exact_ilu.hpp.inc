@@ -30,89 +30,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-/*
-template <typename ValueType>
-__device__ __forceinline__ void legacy_sparse_lower_trsv_combined(
-    const int num_rows, const int* const __restrict__ row_ptrs,
-    const int* const __restrict__ col_idxs,
-    const ValueType* const __restrict__ factored_values_entry,
-    const int* const __restrict__ diag_info,
-    const ValueType* const __restrict__ vec,
-    volatile ValueType* __restrict__ const temp_vec)
-{
-    const int row_index = threadIdx.x;
-
-    if (row_index >= num_rows) {
-        return;
-    }
-
-    ValueType sum = 0;
-
-    const int start = row_ptrs[row_index];
-    const int end = diag_info[row_index];
-
-    int i = start;
-
-    bool completed = false;
-
-    while (!completed) {
-        const int col_index = col_idxs[i];
-
-        if (i < end && isfinite(temp_vec[col_index])) {
-            sum += factored_values_entry[i] * temp_vec[col_index];
-            i++;
-        }
-
-        if (i == end) {
-            temp_vec[row_index] =
-                (vec[row_index] - sum) /
-                1;  // 1 in place of factored_values_entry[end]
-
-            completed = true;
-        }
-    }
-}
-
-template <typename ValueType>
-__device__ __forceinline__ void legacy_sparse_upper_trsv_combined(
-    const int num_rows, const int* const __restrict__ row_ptrs,
-    const int* const __restrict__ col_idxs,
-    const ValueType* const __restrict__ factored_values_entry,
-    const int* const __restrict__ diag_info,
-    volatile const ValueType* const __restrict__ temp_vec,
-    volatile ValueType* const __restrict__ vec_hat)
-{
-    const int row_index = threadIdx.x;
-
-    if (row_index >= num_rows) {
-        return;
-    }
-
-    ValueType sum = 0;
-
-    const int start = diag_info[row_index];
-    const int end = row_ptrs[row_index + 1] - 1;
-    int i = end;
-
-    bool completed = false;
-
-    while (!completed) {
-        const int col_index = col_idxs[i];
-
-        if (i > start && isfinite(vec_hat[col_index])) {
-            sum += factored_values_entry[i] * vec_hat[col_index];
-            i--;
-        }
-
-        if (i == start) {
-            vec_hat[row_index] =
-                (temp_vec[row_index] - sum) / factored_values_entry[start];
-            completed = true;
-        }
-    }
-}
-*/
-
 /**
  * Batch exact ilu0 preconditioner class.
  *
@@ -180,6 +97,7 @@ public:
         const int num_rows, const ValueType* const __restrict__ r,
         volatile ValueType* const __restrict__ z) const
     {
+        printf("\n Apply- exact ilu0 precond apply - yet to be implemented");
         /*
         // vec_hat = precond * vec
         // => L * U  * vec_hat = vec
@@ -205,17 +123,11 @@ public:
 
         __syncthreads();
 
-        legacy_sparse_lower_trsv_combined(
-            num_rows, factored_mat_entry_.row_ptrs,
-            factored_mat_entry_.col_idxs, factored_mat_entry_.values,
-            diag_ptrs_csr_, r, temp_vec);
+        legacy_sparse_lower_trsv_combined(r, temp_vec);
 
         __syncthreads();
 
-        legacy_sparse_upper_trsv_combined(
-            num_rows, factored_mat_entry_.row_ptrs,
-            factored_mat_entry_.col_idxs, factored_mat_entry_.values,
-            diag_ptrs_csr_, temp_vec, z);
+        legacy_sparse_upper_trsv_combined(temp_vec, z);
         */
     }
 
@@ -225,4 +137,90 @@ private:
     const int* __restrict__ const diag_ptrs_csr_;
     gko::batch_csr::BatchEntry<const value_type> factored_mat_entry_;
     ValueType* __restrict__ work_;
+
+    /*
+    __device__ __forceinline__ void legacy_sparse_lower_trsv_combined(
+    const ValueType* const __restrict__ vec,
+    volatile ValueType* __restrict__ const temp_vec)
+    {
+        const int num_rows = factored_values_entry_.num_rows;
+        const int* const __restrict__ row_ptrs = factored_mat_entry_.row_ptrs;
+        const int* const __restrict__ col_idxs = factored_mat_entry_.col_idxs;
+        const ValueType* const __restrict__ factored_values_entry =
+    factored_mat_entry_.values;
+
+        const int row_index = threadIdx.x;
+
+        if (row_index >= num_rows) {
+            return;
+        }
+
+        ValueType sum = 0;
+
+        const int start = row_ptrs[row_index];
+        const int end = diag_ptrs_csr_[row_index];
+
+        int i = start;
+
+        bool completed = false;
+
+        while (!completed) {
+            const int col_index = col_idxs[i];
+
+            if (i < end && isfinite(temp_vec[col_index])) {
+                sum += factored_values_entry[i] * temp_vec[col_index];
+                i++;
+            }
+
+            if (i == end) {
+                temp_vec[row_index] =
+                    (vec[row_index] - sum) /
+                    1;  // 1 in place of factored_values_entry[end]
+
+                completed = true;
+            }
+        }
+    }
+
+
+    __device__ __forceinline__ void legacy_sparse_upper_trsv_combined(
+        volatile const ValueType* const __restrict__ temp_vec,
+        volatile ValueType* const __restrict__ vec_hat)
+    {
+        const int num_rows = factored_values_entry_.num_rows;
+        const int* const __restrict__ row_ptrs = factored_mat_entry_.row_ptrs;
+        const int* const __restrict__ col_idxs = factored_mat_entry_.col_idxs;
+        const ValueType* const __restrict__ factored_values_entry =
+    factored_mat_entry_.values;
+
+        const int row_index = threadIdx.x;
+
+        if (row_index >= num_rows) {
+            return;
+        }
+
+        ValueType sum = 0;
+
+        const int start = diag_ptrs_csr_[row_index];
+        const int end = row_ptrs[row_index + 1] - 1;
+        int i = end;
+
+        bool completed = false;
+
+        while (!completed) {
+            const int col_index = col_idxs[i];
+
+            if (i > start && isfinite(vec_hat[col_index])) {
+                sum += factored_values_entry[i] * vec_hat[col_index];
+                i--;
+            }
+
+            if (i == start) {
+                vec_hat[row_index] =
+                    (temp_vec[row_index] - sum) / factored_values_entry[start];
+                completed = true;
+            }
+        }
+    }
+    */
 };

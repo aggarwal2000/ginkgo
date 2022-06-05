@@ -96,13 +96,37 @@ public:
         const int num_rows, const ValueType* const __restrict__ r,
         volatile ValueType* const __restrict__ z) const
     {
+        printf("\n Apply- parilu0 precond apply - yet to be implemented");
         /*
-        // vec_hat = precond * vec
-        // => L * U  * vec_hat = vec
-        // => L * y = vec , find y , and then U * vec_hat = y, find vec_hat
+         // vec_hat = precond * vec
+         // => L * U  * vec_hat = vec
+         // => L * y = vec , find y , and then U * vec_hat = y, find vec_hat
 
-        // TODO: sparse triangular solves
-        */
+         //sparse triangular solves
+
+         //if we want to use the busy waiting while loop approach, then the
+         num_rows should be <= threadblock size, else there is possibility of a
+         deadlock ! assert(num_rows <= blockDim.x);
+         //TODO: For upper trsv, use thread 0 for the bottommost row, this way
+         we could avoid :  assert(num_rows <= blockDim.x), as there won't be a
+         possibility of deadlock then!
+
+         volatile ValueType* const __restrict__ temp_vec = work_;
+
+         for(int i = threadIdx.x ; i < num_rows; i += blockDim.x)
+         {
+             temp_vec[i] = 1.8/0; //TODO: find a better way to deal with this!
+             z[i] = 1.3/0;
+
+         }
+         __syncthreads();
+
+         legacy_sparse_lower_trsv(r,temp_vec);
+         __syncthreads();
+
+         legacy_sparse_upper_trsv(temp_vec, z);
+
+         */
     }
 
 
@@ -112,4 +136,91 @@ private:
     gko::batch_csr::BatchEntry<const value_type> l_entry_;
     gko::batch_csr::BatchEntry<const value_type> u_entry_;
     ValueType* __restrict__ work_;
+
+    /*
+    __device__ __forceinline__ void legacy_sparse_lower_trsv(const ValueType*
+    const __restrict__ input_vec, volatile ValueType* const __restrict__
+    output_vec)
+    {
+        const int num_rows = l_entry_.num_rows;
+        const int* const __restrict__ L_row_ptrs = l_entry_.row_ptrs;
+        const int* const __restrict__ L_col_idxs = l_entry_.col_idxs;
+        const ValueType* const __restrict__ L_values = l_entry_.values;
+
+        const int row_index = threadIdx.x;
+
+        if(row_index >= num_rows)
+        {
+            return;
+        }
+
+        ValueType sum = zero<ValueType>();
+
+        const int start = L_row_ptrs[row_index];
+        const int end = L_row_ptrs[row_index + 1] - 1;
+        int i = start;
+
+        bool completed = false;
+
+        while(!completed)
+        {
+            const int col_index = L_col_idxs[i];
+
+            if( i < end  &&  isfinite(output_vec[col_index]))
+            {
+                sum += L_values[i] * output_vec[col_index];
+                i++;
+            }
+
+            if(i == end)
+            {
+                output_vec[row_index] = (input_vec[row_index] -
+    sum)/L_values[end]; completed = true;
+            }
+        }
+    }
+
+    __device__ __forceinline__ void legacy_sparse_upper_trsv(volatile const
+    ValueType* const __restrict__ input_vec, volatile ValueType* const
+    __restrict__ output_vec)
+    {
+        const int num_rows = u_entry_.num_rows;
+        const int* const __restrict__ U_row_ptrs = u_entry_.row_ptrs;
+        const int* const __restrict__ U_col_idxs = u_entry_.col_idxs;
+        const ValueType* const __restrict__ U_values = u_entry_.values;
+
+        const int row_index = threadIdx.x;
+
+        if(row_index >= num_rows)
+        {
+            return;
+        }
+
+        ValueType sum = zero<ValueType>();
+
+        const int start = U_row_ptrs[row_index];
+        const int end = U_row_ptrs[row_index + 1]  - 1;
+        int i = end;
+
+        bool completed = false;
+
+        while(!completed )
+        {
+            const int col_index = U_col_idxs[i];
+
+            if( i > start && isfinite(output_vec[col_index]))
+            {
+                sum += U_values[i] * output_vec[col_index];
+                i--;
+            }
+
+            if(i == start)
+            {
+                output_vec[row_index] = (input_vec[row_index] -
+    sum)/U_values[start]; completed = true;
+            }
+
+        }
+
+    }*/
 };
