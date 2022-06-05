@@ -91,11 +91,13 @@ void BatchIluIsai<ValueType, IndexType>::generate(
                 .on(exec)
                 ->generate(sys_csr_smart);
 
-        std::shared_ptr<const batch_csr> factored_mat =
-            exact_ilu_precond->get_const_factorized_mat();
+        std::pair<std::shared_ptr<const batch_csr>,
+                  std::shared_ptr<const batch_csr>>
+            l_u_pair = exact_ilu_precond
+                           ->generate_split_factors_from_factored_matrix();
 
-        // TODO:Split factors
-        GKO_NOT_IMPLEMENTED;
+        l_factor = l_u_pair.first;
+        u_factor = l_u_pair.second;
     }
 
 
