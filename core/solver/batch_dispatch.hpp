@@ -35,10 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ginkgo/core/preconditioner/batch_exact_ilu.hpp>
 #include <ginkgo/core/preconditioner/batch_ilu.hpp>
+#include <ginkgo/core/preconditioner/batch_ilu_isai.hpp>
 #include <ginkgo/core/preconditioner/batch_isai.hpp>
 #include <ginkgo/core/preconditioner/batch_jacobi.hpp>
 #include <ginkgo/core/preconditioner/batch_par_ilu.hpp>
-
 
 #include "core/log/batch_logging.hpp"
 
@@ -208,32 +208,35 @@ public:
             dispatch_on_stop<device::BatchJacobi<device_value_type>>(
                 logger, amat, device::BatchJacobi<device_value_type>(), b_b,
                 x_b);
-        } else if (auto prec = dynamic_cast<
-                       const preconditioner::BatchIlu<value_type>*>(precon_)) {
-            auto l_factor =
-                device::get_batch_struct(prec->get_const_lower_factor());
-            auto u_factor =
-                device::get_batch_struct(prec->get_const_upper_factor());
-            if (prec->get_parameters().trsv_type ==
-                gko::preconditioner::batch_trsv_type::exact) {
-                using trsv_type =
-                    device::batch_exact_trsv_split<device_value_type>;
-                // assuming split factors, or we need one more branch here
-                using ilu_type =
-                    device::batch_ilu_split<device_value_type, trsv_type>;
-                dispatch_on_stop(logger, amat,
-                                 ilu_type{l_factor, u_factor, trsv_type()}, b_b,
-                                 x_b);
-            } else {
-                // TODO: Implement other batch TRSV types
-                GKO_NOT_IMPLEMENTED;
-            }
-        } else if (auto prec = dynamic_cast<
-                       const preconditioner::BatchExactIlu<value_type>*>(
-                       precon_)) {
-            auto factorized_mat =
+        }
+        // else if (auto prec = dynamic_cast<
+        //                const preconditioner::BatchIlu<value_type>*>(precon_))
+        //                {
+        //     auto l_factor =
+        //         device::get_batch_struct(prec->get_const_lower_factor());
+        //     auto u_factor =
+        //         device::get_batch_struct(prec->get_const_upper_factor());
+        //     if (prec->get_parameters().trsv_type ==
+        //         gko::preconditioner::batch_trsv_type::exact) {
+        //         using trsv_type =
+        //             device::batch_exact_trsv_split<device_value_type>;
+        //         // assuming split factors, or we need one more branch here
+        //         using ilu_type =
+        //             device::batch_ilu_split<device_value_type, trsv_type>;
+        //         dispatch_on_stop(logger, amat,
+        //                          ilu_type{l_factor, u_factor, trsv_type()},
+        //                          b_b, x_b);
+        //     } else {
+        //         // TODO: Implement other batch TRSV types
+        //         GKO_NOT_IMPLEMENTED;
+        //     }
+        //}
+        else if (auto prec = dynamic_cast<
+                     const preconditioner::BatchExactIlu<value_type>*>(
+                     precon_)) {
+            const auto factorized_mat =
                 device::get_batch_struct(prec->get_const_factorized_mat());
-            auto diag_info = prec->get_const_diag_locations();
+            const auto diag_info = prec->get_const_diag_locations();
             dispatch_on_stop(logger, amat,
                              device::batch_exact_ilu0<device_value_type>(
                                  factorized_mat, diag_info),
@@ -241,9 +244,9 @@ public:
         } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchParIlu<value_type>*>(
                        precon_)) {
-            auto l_factor =
+            const auto l_factor =
                 device::get_batch_struct(prec->get_const_lower_factor());
-            auto u_factor =
+            const auto u_factor =
                 device::get_batch_struct(prec->get_const_upper_factor());
 
             dispatch_on_stop(
@@ -251,9 +254,24 @@ public:
                 device::batch_parilu0<device_value_type>(l_factor, u_factor),
                 b_b, x_b);
         } else if (auto prec = dynamic_cast<
+                       const preconditioner::BatchIluIsai<value_type>*>(
+                       precon_)) {
+            const auto l_left_isai = device::get_batch_struct(
+                prec->get_const_lower_factor_left_approx_inverse());
+            const auto u_left_isai = device::get_batch_struct(
+                prec->get_const_upper_factor_left_approx_inverse());
+            const auto mult_inv = device::get_batch_struct(
+                prec->get_const_u_left_isai_mult_l_left_isai());
+            const auto is_mult_inv_valid =
+                prec->get_is_inv_factors_batch_spgemm_performed();
+            // TODO: Define device preconditioners, add the includes to files
+            //  like cuda/preconditioner/batch_preconditioners.cuh, and add a
+            //  dispatch.
+            GKO_NOT_IMPLEMENTED;
+        } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
-            auto approx_inv =
-                device::get_batch_struct(prec->get_const_approximate_inverse());
+            const auto left_approx_inv = device::get_batch_struct(
+                prec->get_const_left_approximate_inverse());
             // TODO: Define device preconditioners, add the includes to files
             //  like cuda/preconditioner/batch_preconditioners.cuh, and add a
             //  dispatch.

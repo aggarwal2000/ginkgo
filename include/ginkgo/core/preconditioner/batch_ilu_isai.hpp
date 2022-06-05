@@ -54,7 +54,7 @@ enum class batch_ilu_factorization_type { exact, par_ilu };
 
 
 /**
- * A batch of exact ILU(0) factor preconditioners for a batch of matrices.
+ * A batch of ILU-ISAI preconditioners for a batch of matrices.
  *
  * @tparam ValueType  precision of matrix elements
  *
@@ -92,7 +92,8 @@ public:
 
 
         /**
-         * Number of sweeps for parILU0 generation
+         * Number of sweeps for parILU0 generation (in case parilu factorization
+         * is used)
          *
          */
         int GKO_FACTORY_PARAMETER_SCALAR(par_ilu_num_sweeps, 3);
@@ -105,35 +106,50 @@ public:
             ilu_factorization_type, batch_ilu_factorization_type::exact);
 
         /**
-         * Sparisty pattern for isai
+         * Sparisty pattern for lower triangular factor's isai
          *
          */
-        int GKO_FACTORY_PARAMETER_SCALAR(isai_sparsity_power, 1);
+        int GKO_FACTORY_PARAMETER_SCALAR(lower_factor_isai_sparsity_power, 1);
+
+        /**
+         * Sparisty pattern for upper triangular factor's isai
+         *
+         */
+        int GKO_FACTORY_PARAMETER_SCALAR(upper_factor_isai_sparsity_power, 1);
+
+
+        bool GKO_FACTORY_PARAMETER_SCALAR(perform_inv_factors_batch_spgemm,
+                                          false);
     };
     GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchIluIsai, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
 
-    std::unique_ptr<BatchLinOp> transpose() const override GKO_NOT_IMPLEMENTED;
+    std::unique_ptr<BatchLinOp> transpose() const;
 
-    std::unique_ptr<BatchLinOp> conj_transpose() const override
-        GKO_NOT_IMPLEMENTED;
+    std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
     const matrix::BatchCsr<ValueType, IndexType>*
-    get_const_lower_factor_inverse() const
+    get_const_lower_factor_left_approx_inverse() const
     {
-        return l_inv_.get();
+        return l_left_isai_.get();
     }
 
     const matrix::BatchCsr<ValueType, IndexType>*
-    get_const_upper_factor_inverse() const
+    get_const_upper_factor_left_approx_inverse() const
     {
-        return u_inv_.get();
+        return u_left_isai_.get();
     }
 
+    // u_left_isai_ * l_left_isai_
     const matrix::BatchCsr<ValueType, IndexType>*
-    get_const_multiplication_of_inverses() const
+    get_const_u_left_isai_mult_l_left_isai() const
     {
         return mult_inv_.get();
+    }
+
+    bool get_is_inv_factors_batch_spgemm_performed() const
+    {
+        return parameters_.perform_inv_factors_batch_spgemm;
     }
 
 protected:
@@ -170,7 +186,7 @@ protected:
      * @param system_matrix  the source matrix used to generate the
      *                       preconditioner
      */
-    void generate(const BatchLinOp* system_matrix) GKO_NOT_IMPLEMENTED;
+    void generate(const BatchLinOp* system_matrix);
 
     void apply_impl(const BatchLinOp* b, BatchLinOp* x) const override{};
 
@@ -178,8 +194,8 @@ protected:
                     const BatchLinOp* beta, BatchLinOp* x) const override{};
 
 private:
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> l_inv_;
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> u_inv_;
+    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> l_left_isai_;
+    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> u_left_isai_;
     std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> mult_inv_;
 };
 

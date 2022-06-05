@@ -47,6 +47,11 @@ namespace gko {
  */
 namespace preconditioner {
 
+/**
+ * Type of the matrix for which sparse approx. inverse is to be generated.
+ *
+ */
+enum class batch_isai_sys_mat_type { lower, upper, general };
 
 /**
  * A batch of approximate inverse preconditioners for a batch of matrices.
@@ -77,6 +82,24 @@ public:
          * the approximate inverse.
          */
         int GKO_FACTORY_PARAMETER_SCALAR(sparsity_power, 1);
+
+        /**
+         * Type of the matrix for which isai is to be generated.
+         */
+        batch_isai_sys_mat_type GKO_FACTORY_PARAMETER_SCALAR(
+            matrix_type_isai, batch_isai_sys_mat_type::general);
+
+        /**
+         * The `system_matrix`, which will be given to this factory, must be
+         * sorted (first by row, then by column) in order for the algorithm
+         * to work. If it is known that the matrix will be sorted, this
+         * parameter can be set to `true` to skip the sorting (therefore,
+         * shortening the runtime).
+         * However, if it is unknown or if the matrix is known to be not sorted,
+         * it must remain `false`, otherwise, this factorization might be
+         * incorrect.
+         */
+        bool GKO_FACTORY_PARAMETER_SCALAR(skip_sorting, false);
     };
     GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchIsai, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
@@ -86,9 +109,9 @@ public:
     std::unique_ptr<BatchLinOp> conj_transpose() const override;
 
     const matrix::BatchCsr<ValueType, IndexType>*
-    get_const_approximate_inverse() const
+    get_const_left_approximate_inverse() const
     {
-        return isai_.get();
+        return left_isai_.get();
     }
 
 protected:
@@ -132,7 +155,7 @@ protected:
                     const BatchLinOp* beta, BatchLinOp* x) const override{};
 
 private:
-    std::unique_ptr<matrix::BatchCsr<ValueType, IndexType>> isai_;
+    std::unique_ptr<matrix::BatchCsr<ValueType, IndexType>> left_isai_;
 };
 
 
