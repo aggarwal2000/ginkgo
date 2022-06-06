@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 /**
- * Batch exact ilu0 preconditioner class.
+ * Batch parilu0 preconditioner class.
  *
  */
 template <typename ValueType>

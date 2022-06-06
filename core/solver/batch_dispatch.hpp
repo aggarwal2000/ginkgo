@@ -104,6 +104,7 @@ using DeviceValueType = ValueType;
 #include "reference/preconditioner/batch_exact_ilu.hpp"
 #include "reference/preconditioner/batch_identity.hpp"
 #include "reference/preconditioner/batch_ilu.hpp"
+#include "reference/preconditioner/batch_ilu_isai.hpp"
 #include "reference/preconditioner/batch_jacobi.hpp"
 #include "reference/preconditioner/batch_par_ilu.hpp"
 #include "reference/preconditioner/batch_trsv.hpp"
