@@ -261,14 +261,16 @@ public:
                 prec->get_const_lower_factor_left_approx_inverse().get());
             const auto u_left_isai = device::get_batch_struct(
                 prec->get_const_upper_factor_left_approx_inverse().get());
-            const auto mult_inv = device::get_batch_struct(
+            const auto mult_inv = device::maybe_null_batch_struct(
                 prec->get_const_u_left_isai_mult_l_left_isai().get());
             const auto is_mult_inv_valid =
                 prec->get_is_inv_factors_batch_spgemm_performed();
-            // TODO: Define device preconditioners, add the includes to files
-            //  like cuda/preconditioner/batch_preconditioners.cuh, and add a
-            //  dispatch.
-            GKO_NOT_IMPLEMENTED;
+
+            dispatch_on_stop(
+                logger, amat,
+                device::batch_ilu_isai<device_value_type>(
+                    l_left_isai, u_left_isai, mult_inv, is_mult_inv_valid),
+                b_b, x_b);
         } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
             const auto left_approx_inv = device::get_batch_struct(

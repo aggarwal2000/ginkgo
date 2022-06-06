@@ -117,22 +117,23 @@ public:
         work_ = work;
     }
 
-    __device__ __forceinline__ void apply(
-        const int num_rows, const ValueType* const __restrict__ r,
-        volatile ValueType* const __restrict__ z) const
+    __device__ __forceinline__ void apply(const int num_rows,
+                                          const ValueType* const __restrict__ r,
+                                          ValueType* const __restrict__ z) const
     {
         // vec_hat = precond * vec
         // => L * U  * vec_hat = vec
         // => U_left_inv * L_left_inv * L * U * vec_hat = U_left_inv *
         // L_left_inv * vec
         // => vec_hat =  U_left_inv * L_left_inv * vec
+        /*
         if (is_inv_factors_spgemm_ == true) {
             single_matvec_kernel(mult_inv_entry_, r, z);
         } else {
             single_matvec_kernel(l_left_inv_entry_, r, work_);
             __syncthreads();
             single_matvec_kernel(u_left_inv_entry_, work_, z);
-        }
+        }*/
     }
 
 
