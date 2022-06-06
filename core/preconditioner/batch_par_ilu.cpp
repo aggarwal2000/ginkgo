@@ -76,7 +76,7 @@ void create_dependency_graph(
                                   A_row_ptrs.get_data());
     Array<IndexType> A_col_idxs(exec->get_master(), nnz);
     exec->get_master()->copy_from(
-        exec.get(), nnz, sys_mat->get_const_col_idxs(), A_row_ptrs.get_data());
+        exec.get(), nnz, sys_mat->get_const_col_idxs(), A_col_idxs.get_data());
     Array<IndexType> L_row_ptrs(exec->get_master(), nrows + 1);
     exec->get_master()->copy_from(exec.get(), nrows + 1,
                                   l_factor->get_const_row_ptrs(),
