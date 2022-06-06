@@ -163,6 +163,7 @@ set(GINKGO_HIP_SOURCES
     components/prefix_sum_kernels.hip.cpp
     distributed/partition_kernels.hip.cpp
     factorization/factorization_kernels.hip.cpp
+    factorization/batch_factorization_kernels.hip.cpp
     factorization/ic_kernels.hip.cpp
     factorization/ilu_kernels.hip.cpp
     factorization/par_ic_kernels.hip.cpp

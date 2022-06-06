@@ -30,16 +30,22 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#include "core/preconditioner/batch_par_ilu_kernels.hpp"
+#include "core/factorization/batch_factorization_kernels.hpp"
 
 
+#include <ginkgo/core/base/array.hpp>
 #include <ginkgo/core/matrix/batch_csr.hpp>
+#include <ginkgo/core/matrix/csr.hpp>
 
+#include "core/components/prefix_sum_kernels.hpp"
 #include "core/matrix/batch_struct.hpp"
+#include "core/matrix/csr_builder.hpp"
 #include "cuda/base/config.hpp"
 #include "cuda/base/exception.cuh"
 #include "cuda/base/types.hpp"
 #include "cuda/components/cooperative_groups.cuh"
+#include "cuda/components/intrinsics.cuh"
+#include "cuda/components/searching.cuh"
 #include "cuda/components/thread_ids.cuh"
 #include "cuda/matrix/batch_struct.hpp"
 
@@ -47,27 +53,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace gko {
 namespace kernels {
 namespace cuda {
-namespace batch_par_ilu {
-namespace {
+/**
+ * @brief The batch_factorization namespace.
+ *
+ * @ingroup factor
+ */
+namespace batch_factorization {
 
 
-constexpr size_type default_block_size = 256;
+constexpr int default_block_size{512};
 
-#include "common/cuda_hip/matrix/batch_vector_kernels.hpp.inc"
-#include "common/cuda_hip/preconditioner/batch_par_ilu_kernels.hpp.inc"
-//#include "common/cuda_hip/preconditioner/batch_par_ilu.hpp.inc"
 
-}  // namespace
+#include "common/cuda_hip/factorization/batch_factorization_kernels.hpp.inc"
 
 
 template <typename ValueType, typename IndexType>
-void compute_par_ilu0(
+void generate_common_pattern_to_fill_l_and_u(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const matrix::Csr<ValueType, IndexType>* const first_sys_mat,
+    const IndexType* const l_row_ptrs, const IndexType* const u_row_ptrs,
+    IndexType* const l_col_holders, IndexType* const u_col_holders)
+{
+    const size_type num_rows = first_sys_mat->get_size()[0];
+    const size_type num_warps = num_rows;
+    const size_type num_blocks =
+        num_warps / (default_block_size / config::warp_size);
+
+    generate_common_pattern_to_fill_L_and_U<<<num_blocks, default_block_size>>>(
+        static_cast<int>(num_rows), first_sys_mat->get_const_row_ptrs(),
+        first_sys_mat->get_const_col_idxs(), l_row_ptrs, u_row_ptrs,
+        l_col_holders, u_col_holders);
+
+    GKO_CUDA_LAST_IF_ERROR_THROW;
+}
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_FACTORIZATION_GENERATE_COMMON_PATTERN_KERNEL);
+
+
+template <typename ValueType, typename IndexType>
+void initialize_batch_l_and_batch_u(
     std::shared_ptr<const DefaultExecutor> exec,
     const matrix::BatchCsr<ValueType, IndexType>* const sys_mat,
     matrix::BatchCsr<ValueType, IndexType>* const l_factor,
     matrix::BatchCsr<ValueType, IndexType>* const u_factor,
-    const int num_sweeps, const IndexType* const dependencies,
-    const IndexType* const nz_ptrs)
+    const IndexType* const l_col_holders, const IndexType* const u_col_holders)
 {
     const auto num_rows = static_cast<int>(sys_mat->get_size().at(0)[0]);
     const auto nbatch = sys_mat->get_num_batch_entries();
@@ -77,37 +107,25 @@ void compute_par_ilu0(
         static_cast<int>(l_factor->get_num_stored_elements() / nbatch);
     const auto u_nnz =
         static_cast<int>(u_factor->get_num_stored_elements() / nbatch);
+    const int greater_nnz = l_nnz > u_nnz ? l_nnz : u_nnz;
+    const size_type grid_fill_LU =
+        ceildiv(greater_nnz * nbatch, default_block_size);
 
-    const size_type dynamic_shared_mem_bytes =
-        (l_nnz + u_nnz) * sizeof(ValueType);
-
-    compute_parilu0_kernel<<<nbatch, default_block_size,
-                             dynamic_shared_mem_bytes>>>(
-        nbatch, num_rows, nnz, as_cuda_type(sys_mat->get_const_values()), l_nnz,
-        as_cuda_type(l_factor->get_values()), u_nnz,
-        as_cuda_type(u_factor->get_values()), num_sweeps, dependencies,
-        nz_ptrs);
+    fill_L_and_U<<<grid_fill_LU, default_block_size>>>(
+        nbatch, num_rows, nnz, sys_mat->get_const_col_idxs(),
+        as_cuda_type(sys_mat->get_const_values()), l_nnz,
+        l_factor->get_col_idxs(), as_cuda_type(l_factor->get_values()),
+        l_col_holders, u_nnz, u_factor->get_col_idxs(),
+        as_cuda_type(u_factor->get_values()), u_col_holders);
 
     GKO_CUDA_LAST_IF_ERROR_THROW;
 }
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PAR_ILU_COMPUTE_PARILU0_KERNEL);
+    GKO_DECLARE_BATCH_FACTORIZATION_INITIALIZE_BATCH_L_AND_BATCH_U);
 
 
-template <typename ValueType, typename IndexType>
-void apply_par_ilu0(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const l_factor,
-    const matrix::BatchCsr<ValueType, IndexType>* const u_factor,
-    const matrix::BatchDense<ValueType>* const r,
-    matrix::BatchDense<ValueType>* const z) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PAR_ILU_APPLY_KERNEL);
-
-
-}  // namespace batch_par_ilu
+}  // namespace batch_factorization
 }  // namespace cuda
 }  // namespace kernels
 }  // namespace gko

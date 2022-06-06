@@ -30,47 +30,59 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#include "core/preconditioner/batch_par_ilu_kernels.hpp"
+#include "core/factorization/batch_factorization_kernels.hpp"
 
 
+#include <algorithm>
+#include <memory>
+
+
+#include <ginkgo/core/base/array.hpp>
 #include <ginkgo/core/matrix/batch_csr.hpp>
+#include <ginkgo/core/matrix/csr.hpp>
 
 
-#include "core/matrix/batch_struct.hpp"
+#include "core/components/prefix_sum_kernels.hpp"
+#include "core/matrix/csr_builder.hpp"
 
 
 namespace gko {
 namespace kernels {
-namespace dpcpp {
-namespace batch_par_ilu {
+namespace reference {
+/**
+ * @brief The batch_factorization namespace.
+ *
+ * @ingroup factor
+ */
+namespace batch_factorization {
 
 
 template <typename ValueType, typename IndexType>
-void compute_par_ilu0(
+void generate_common_pattern_to_fill_l_and_u(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const matrix::Csr<ValueType, IndexType>* const first_sys_mat,
+    const IndexType* const l_row_ptrs, const IndexType* const u_row_ptrs,
+    IndexType* const l_col_holders,
+    IndexType* const u_col_holders) GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_FACTORIZATION_GENERATE_COMMON_PATTERN_KERNEL);
+
+
+template <typename ValueType, typename IndexType>
+void initialize_batch_l_and_batch_u(
     std::shared_ptr<const DefaultExecutor> exec,
     const matrix::BatchCsr<ValueType, IndexType>* const sys_mat,
     matrix::BatchCsr<ValueType, IndexType>* const l_factor,
     matrix::BatchCsr<ValueType, IndexType>* const u_factor,
-    const int num_sweeps, const IndexType* const dependencies,
-    const IndexType* const nz_ptrs) GKO_NOT_IMPLEMENTED;
+    const IndexType* const l_col_holders,
+    const IndexType* const u_col_holders) GKO_NOT_IMPLEMENTED;
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PAR_ILU_COMPUTE_PARILU0_KERNEL);
+    GKO_DECLARE_BATCH_FACTORIZATION_INITIALIZE_BATCH_L_AND_BATCH_U);
 
 
-template <typename ValueType, typename IndexType>
-void apply_par_ilu0(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const l_factor,
-    const matrix::BatchCsr<ValueType, IndexType>* const u_factor,
-    const matrix::BatchDense<ValueType>* const r,
-    matrix::BatchDense<ValueType>* const z) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PAR_ILU_APPLY_KERNEL);
-
-
-}  // namespace batch_par_ilu
-}  // namespace dpcpp
+}  // namespace batch_factorization
+}  // namespace reference
 }  // namespace kernels
 }  // namespace gko

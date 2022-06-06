@@ -33,11 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ginkgo/core/preconditioner/batch_exact_ilu.hpp>
 
 
+#include "core/factorization/batch_factorization_kernels.hpp"
 #include "core/factorization/factorization_kernels.hpp"
 #include "core/matrix/batch_csr_kernels.hpp"
 #include "core/matrix/csr_kernels.hpp"
 #include "core/preconditioner/batch_exact_ilu_kernels.hpp"
-#include "core/preconditioner/batch_par_ilu_kernels.hpp"
 
 
 namespace gko {
@@ -53,10 +53,11 @@ GKO_REGISTER_OPERATION(generate_exact_ilu0,
                        batch_exact_ilu::generate_exact_ilu0);
 GKO_REGISTER_OPERATION(initialize_row_ptrs_l_u,
                        factorization::initialize_row_ptrs_l_u);
-GKO_REGISTER_OPERATION(generate_common_pattern_to_fill_l_and_u,
-                       batch_par_ilu::generate_common_pattern_to_fill_l_and_u);
+GKO_REGISTER_OPERATION(
+    generate_common_pattern_to_fill_l_and_u,
+    batch_factorization::generate_common_pattern_to_fill_l_and_u);
 GKO_REGISTER_OPERATION(initialize_batch_l_and_batch_u,
-                       batch_par_ilu::initialize_batch_l_and_batch_u);
+                       batch_factorization::initialize_batch_l_and_batch_u);
 
 
 }  // namespace
@@ -171,6 +172,7 @@ BatchExactIlu<ValueType,
     Array<IndexType> u_row_ptrs(exec, nrows + 1);
 
     // TODO: Write a kernel which makes use of diag info found in generate step
+    // (add it to factorization kernels)
     exec->run(batch_exact_ilu::make_initialize_row_ptrs_l_u(
         first_csr.get(), l_row_ptrs.get_data(), u_row_ptrs.get_data()));
 

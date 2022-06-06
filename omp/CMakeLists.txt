@@ -10,6 +10,7 @@ target_sources(ginkgo_omp
     components/prefix_sum_kernels.cpp
     distributed/partition_kernels.cpp
     factorization/factorization_kernels.cpp
+    factorization/batch_factorization_kernels.cpp
     factorization/ic_kernels.cpp
     factorization/ilu_kernels.cpp
     factorization/par_ic_kernels.cpp

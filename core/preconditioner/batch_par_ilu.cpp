@@ -33,11 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ginkgo/core/preconditioner/batch_par_ilu.hpp>
 
 
+#include "core/factorization/batch_factorization_kernels.hpp"
 #include "core/factorization/factorization_kernels.hpp"
 #include "core/matrix/batch_csr_kernels.hpp"
 #include "core/matrix/csr_kernels.hpp"
 #include "core/preconditioner/batch_par_ilu_kernels.hpp"
-
 
 namespace gko {
 namespace preconditioner {
@@ -48,10 +48,11 @@ GKO_REGISTER_OPERATION(check_diag_entries_exist,
                        csr::check_diagonal_entries_exist);
 GKO_REGISTER_OPERATION(initialize_row_ptrs_l_u,
                        factorization::initialize_row_ptrs_l_u);
-GKO_REGISTER_OPERATION(generate_common_pattern_to_fill_l_and_u,
-                       batch_par_ilu::generate_common_pattern_to_fill_l_and_u);
+GKO_REGISTER_OPERATION(
+    generate_common_pattern_to_fill_l_and_u,
+    batch_factorization::generate_common_pattern_to_fill_l_and_u);
 GKO_REGISTER_OPERATION(initialize_batch_l_and_batch_u,
-                       batch_par_ilu::initialize_batch_l_and_batch_u);
+                       batch_factorization::initialize_batch_l_and_batch_u);
 GKO_REGISTER_OPERATION(compute_par_ilu0, batch_par_ilu::compute_par_ilu0);
 
 

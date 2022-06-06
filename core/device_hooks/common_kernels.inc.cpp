@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/components/prefix_sum_kernels.hpp"
 #include "core/components/reduce_array_kernels.hpp"
 #include "core/distributed/partition_kernels.hpp"
+#include "core/factorization/batch_factorization_kernels.hpp"
 #include "core/factorization/factorization_kernels.hpp"
 #include "core/factorization/ic_kernels.hpp"
 #include "core/factorization/ilu_kernels.hpp"
@@ -1170,6 +1171,16 @@ GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_ILU_SPLIT_APPLY_KERNEL);
 }  // namespace batch_ilu
 
 
+namespace batch_factorization {
+
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_FACTORIZATION_GENERATE_COMMON_PATTERN_KERNEL);
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_FACTORIZATION_INITIALIZE_BATCH_L_AND_BATCH_U);
+
+}  // namespace batch_factorization
+
+
 namespace batch_exact_ilu {
 
 
@@ -1183,10 +1194,6 @@ GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_EXACT_ILU_APPLY_KERNEL);
 
 namespace batch_par_ilu {
 
-GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PAR_ILU_GENERATE_COMMON_PATTERN_KERNEL);
-GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PAR_ILU_INITIALIZE_BATCL_L_AND_BATCH_U);
 GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
     GKO_DECLARE_BATCH_PAR_ILU_COMPUTE_PARILU0_KERNEL);
 GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_PAR_ILU_APPLY_KERNEL);

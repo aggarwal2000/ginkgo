@@ -23,6 +23,7 @@ target_sources(ginkgo_dpcpp
     components/prefix_sum_kernels.dp.cpp
     distributed/partition_kernels.dp.cpp
     factorization/factorization_kernels.dp.cpp
+    factorization/batch_factorization_kernels.dp.cpp
     factorization/ic_kernels.dp.cpp
     factorization/ilu_kernels.dp.cpp
     factorization/par_ic_kernels.dp.cpp
