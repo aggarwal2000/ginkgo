@@ -126,6 +126,8 @@ public:
         // => U_left_inv * L_left_inv * L * U * vec_hat = U_left_inv *
         // L_left_inv * vec
         // => vec_hat =  U_left_inv * L_left_inv * vec
+        printf("\n batch isai ilu precond apply- yet to be implemneted");
+        // TODO: Include appropriate header
         /*
         if (is_inv_factors_spgemm_ == true) {
             single_matvec_kernel(mult_inv_entry_, r, z);
