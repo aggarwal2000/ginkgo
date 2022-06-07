@@ -93,12 +93,14 @@ public:
         work_ = work;
     }
 
+    /*
     __device__ __forceinline__ void apply(
         const int num_rows, const ValueType* const __restrict__ r,
         volatile ValueType* const __restrict__ z) const
     {
+        if(threadIdx.x == 0)
         printf("\n Apply- exact ilu0 precond apply - yet to be implemented");
-        /*
+
         // vec_hat = precond * vec
         // => L * U  * vec_hat = vec
         // => L * y = vec , find y , and then U * vec_hat = y, find vec_hat
@@ -128,7 +130,48 @@ public:
         __syncthreads();
 
         legacy_sparse_upper_trsv_combined(temp_vec, z);
-        */
+
+    }
+    */
+
+    __device__ __forceinline__ void apply(const int num_rows,
+                                          const ValueType* const __restrict__ r,
+                                          ValueType* const __restrict__ z) const
+    {
+        if (threadIdx.x == 0)
+            printf(
+                "\n Apply- exact ilu0 precond apply - yet to be implemented");
+
+        const int* const __restrict__ row_ptrs = factored_mat_entry_.row_ptrs;
+        const int* const __restrict__ col_idxs = factored_mat_entry_.col_idxs;
+        const ValueType* const __restrict__ factored_values_entry =
+            factored_mat_entry_.values;
+
+        if (threadIdx.x == 0) {
+            // L * work_ = r
+            for (int row_idx = 0; row_idx < num_rows; row_idx++) {
+                ValueType sum{0};
+
+                for (int i = row_ptrs[row_idx]; i < diag_ptrs_csr_[row_idx];
+                     i++) {
+                    sum += factored_values_entry[i] * work_[col_idxs[i]];
+                }
+                work_[row_idx] = r[row_idx] - sum;
+            }
+
+            // U * z = work_
+            for (int row_idx = num_rows - 1; row_idx >= 0; row_idx--) {
+                ValueType sum{0};
+
+                for (int i = row_ptrs[row_idx + 1] - 1;
+                     i > diag_ptrs_csr_[row_idx]; i--) {
+                    sum += factored_values_entry[i] * z[col_idxs[i]];
+                }
+
+                z[row_idx] = (work_[row_idx] - sum) /
+                             factored_values_entry[diag_ptrs_csr_[row_idx]];
+            }
+        }
     }
 
 
@@ -143,7 +186,7 @@ private:
     const ValueType* const __restrict__ vec,
     volatile ValueType* __restrict__ const temp_vec)
     {
-        const int num_rows = factored_values_entry_.num_rows;
+        const int num_rows = factored_mat_entry_.num_rows;
         const int* const __restrict__ row_ptrs = factored_mat_entry_.row_ptrs;
         const int* const __restrict__ col_idxs = factored_mat_entry_.col_idxs;
         const ValueType* const __restrict__ factored_values_entry =
@@ -187,7 +230,7 @@ private:
         volatile const ValueType* const __restrict__ temp_vec,
         volatile ValueType* const __restrict__ vec_hat)
     {
-        const int num_rows = factored_values_entry_.num_rows;
+        const int num_rows = factored_mat_entry_.num_rows;
         const int* const __restrict__ row_ptrs = factored_mat_entry_.row_ptrs;
         const int* const __restrict__ col_idxs = factored_mat_entry_.col_idxs;
         const ValueType* const __restrict__ factored_values_entry =

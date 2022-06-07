@@ -92,12 +92,70 @@ public:
         work_ = work;
     }
 
+    __device__ __forceinline__ void apply(const int num_rows,
+                                          const ValueType* const __restrict__ r,
+                                          ValueType* const __restrict__ z) const
+    {
+        const int* const __restrict__ L_row_ptrs = l_entry_.row_ptrs;
+        const int* const __restrict__ L_col_idxs = l_entry_.col_idxs;
+        const ValueType* const __restrict__ L_values = l_entry_.values;
+
+        const int* const __restrict__ U_row_ptrs = u_entry_.row_ptrs;
+        const int* const __restrict__ U_col_idxs = u_entry_.col_idxs;
+        const ValueType* const __restrict__ U_values = u_entry_.values;
+
+        if (threadIdx.x == 0) {
+            printf("TODO- TRSV");
+
+            // L * work_ = r
+            // Note: L is in sorted order
+            for (int row_idx = 0; row_idx < num_rows; row_idx++) {
+                printf("\n row idx: %d", row_idx);
+                const int row_st = L_row_ptrs[row_idx];
+                const int row_end = L_row_ptrs[row_idx + 1];
+
+                ValueType sum{0};
+
+                for (int i = row_st; i < row_end - 1; i++) {
+                    printf("\n i: %d", i);
+                    const int col_idx = L_col_idxs[i];
+                    sum += L_values[i] * work_[col_idx];
+                }
+
+                work_[row_idx] = (r[row_idx] - sum) / L_values[row_end - 1];
+                printf("\n work at row idx: %d ", row_idx);
+            }
+
+            printf("Lower TRSV done");
+
+            // U * z = work_
+            // note: U is in sorted order
+            for (int row_idx = num_rows - 1; row_idx >= 0; row_idx--) {
+                const int row_st = U_row_ptrs[row_idx];
+                const int row_end = U_row_ptrs[row_idx + 1];
+
+                ValueType sum{0};
+
+                for (int i = row_end - 1; i > row_st; i--) {
+                    const int col_idx = U_col_idxs[i];
+                    sum += U_values[i] * z[col_idx];
+                }
+
+                z[row_idx] = (work_[row_idx] - sum) / U_values[row_st];
+            }
+
+            printf("Upper TRSV done");
+        }
+    }
+
+    /*
     __device__ __forceinline__ void apply(
         const int num_rows, const ValueType* const __restrict__ r,
         volatile ValueType* const __restrict__ z) const
     {
-        printf("\n Apply- parilu0 precond apply - yet to be implemented");
-        /*
+       //  if(threadIdx.x == 0)
+       // printf("\n Apply- parilu0 precond apply - yet to be implemented");
+
          // vec_hat = precond * vec
          // => L * U  * vec_hat = vec
          // => L * y = vec , find y , and then U * vec_hat = y, find vec_hat
@@ -105,11 +163,13 @@ public:
          //sparse triangular solves
 
          //if we want to use the busy waiting while loop approach, then the
-         num_rows should be <= threadblock size, else there is possibility of a
-         deadlock ! assert(num_rows <= blockDim.x);
+         // num_rows should be <= threadblock size, else there is possibility of
+    a
+         // deadlock !
+         assert(num_rows <= blockDim.x);
          //TODO: For upper trsv, use thread 0 for the bottommost row, this way
-         we could avoid :  assert(num_rows <= blockDim.x), as there won't be a
-         possibility of deadlock then!
+       //  we could avoid :  assert(num_rows <= blockDim.x), as there won't be a
+       //  possibility of deadlock then!
 
          volatile ValueType* const __restrict__ temp_vec = work_;
 
@@ -126,8 +186,7 @@ public:
 
          legacy_sparse_upper_trsv(temp_vec, z);
 
-         */
-    }
+    }*/
 
 
 private:
