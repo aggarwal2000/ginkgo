@@ -31,51 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
 
-namespace {
-
-// load and store functions by written by Tobias
-// (cuda/solver/common_trs_kernels.cuh)
-template <typename ValueType, typename IndexType>
-__device__ __forceinline__
-    std::enable_if_t<std::is_floating_point<ValueType>::value, ValueType>
-    load(const ValueType* values, IndexType index)
-{
-    const volatile ValueType* val = values + index;
-    return *val;
-}
-
-template <typename ValueType, typename IndexType>
-__device__ __forceinline__ std::enable_if_t<
-    std::is_floating_point<ValueType>::value, thrust::complex<ValueType>>
-load(const thrust::complex<ValueType>* values, IndexType index)
-{
-    auto real = reinterpret_cast<const ValueType*>(values);
-    auto imag = real + 1;
-    return {load(real, 2 * index), load(imag, 2 * index)};
-}
-
-template <typename ValueType, typename IndexType>
-__device__ __forceinline__ void store(
-    ValueType* values, IndexType index,
-    std::enable_if_t<std::is_floating_point<ValueType>::value, ValueType> value)
-{
-    volatile ValueType* val = values + index;
-    *val = value;
-}
-
-template <typename ValueType, typename IndexType>
-__device__ __forceinline__ void store(thrust::complex<ValueType>* values,
-                                      IndexType index,
-                                      thrust::complex<ValueType> value)
-{
-    auto real = reinterpret_cast<ValueType*>(values);
-    auto imag = real + 1;
-    store(real, 2 * index, value.real());
-    store(imag, 2 * index, value.imag());
-}
-
-}  // namespace
-
 /**
  * Batch parilu0 preconditioner class.
  *
@@ -137,55 +92,6 @@ public:
         work_ = work;
     }
 
-    /*
-    __device__ __forceinline__ void apply(const int num_rows,
-                                          const ValueType* const __restrict__ r,
-                                          ValueType* const __restrict__ z) const
-    {
-        const int* const __restrict__ L_row_ptrs = l_entry_.row_ptrs;
-        const int* const __restrict__ L_col_idxs = l_entry_.col_idxs;
-        const ValueType* const __restrict__ L_values = l_entry_.values;
-
-        const int* const __restrict__ U_row_ptrs = u_entry_.row_ptrs;
-        const int* const __restrict__ U_col_idxs = u_entry_.col_idxs;
-        const ValueType* const __restrict__ U_values = u_entry_.values;
-
-        if (threadIdx.x == 0) {
-            // L * work_ = r
-            // Note: L is in sorted order
-            for (int row_idx = 0; row_idx < num_rows; row_idx++) {
-                const int row_st = L_row_ptrs[row_idx];
-                const int row_end = L_row_ptrs[row_idx + 1];
-
-                ValueType sum{0};
-
-                for (int i = row_st; i < row_end - 1; i++) {
-                    const int col_idx = L_col_idxs[i];
-                    sum += L_values[i] * work_[col_idx];
-                }
-
-                work_[row_idx] = (r[row_idx] - sum) / L_values[row_end - 1];
-            }
-
-
-            // U * z = work_
-            // note: U is in sorted order
-            for (int row_idx = num_rows - 1; row_idx >= 0; row_idx--) {
-                const int row_st = U_row_ptrs[row_idx];
-                const int row_end = U_row_ptrs[row_idx + 1];
-
-                ValueType sum{0};
-
-                for (int i = row_end - 1; i > row_st; i--) {
-                    const int col_idx = U_col_idxs[i];
-                    sum += U_values[i] * z[col_idx];
-                }
-
-                z[row_idx] = (work_[row_idx] - sum) / U_values[row_st];
-            }
-        }
-    }*/
-
 
     __device__ __forceinline__ void apply(const int num_rows,
                                           const ValueType* const __restrict__ r,
@@ -202,6 +108,9 @@ public:
         const int* const __restrict__ U_row_ptrs = u_entry_.row_ptrs;
         const int* const __restrict__ U_col_idxs = u_entry_.col_idxs;
         const ValueType* const __restrict__ U_values = u_entry_.values;
+
+        // TODO: Add kernels for volta architecture and its successors (which
+        // make use of independent thread scheduling)
 
         /*
        if (threadIdx.x == 0) {

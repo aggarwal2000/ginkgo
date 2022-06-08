@@ -125,8 +125,7 @@ void BatchIluIsai<ValueType, IndexType>::generate(
     if (parameters_.perform_inv_factors_batch_spgemm) {
         GKO_NOT_IMPLEMENTED;
         // mult_inv_ = batch_csr::create(exec);
-        // Note::mult_inv_ should have allocated memory to store solution (u_inv
-        // * l_inv)
+        // mult_inv_ : memory allocation? to store solution (u_inv * l_inv)
         // u_left_isai_->apply(l_left_isai_, mult_inv_);
     }
 }
