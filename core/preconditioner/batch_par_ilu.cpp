@@ -177,7 +177,6 @@ void BatchParIlu<ValueType, IndexType>::generate(
         sys_csr = a_matrix.get();
     }
 
-    std::shared_ptr<const matrix_type> sys_csr_smart(sys_csr);
 
     const auto nbatch = sys_csr->get_num_batch_entries();
     const auto nrows = sys_csr->get_size().at(0)[0];
@@ -185,10 +184,9 @@ void BatchParIlu<ValueType, IndexType>::generate(
 
 
     if (parameters_.skip_sorting == false) {
-        std::shared_ptr<matrix_type> temp_sys_csr_smart =
-            gko::clone(this->get_executor(), sys_csr_smart);
-        temp_sys_csr_smart->sort_by_column_index();
-        sys_csr_smart = temp_sys_csr_smart;
+        matrix_type* temp_sys_csr = gko::clone(this->get_executor(), sys_csr);
+        temp_sys_csr->sort_by_column_index();
+        sys_csr = temp_sys_csr;
     }
 
 
@@ -243,15 +241,15 @@ void BatchParIlu<ValueType, IndexType>::generate(
         u_col_holders.get_data()));
 
     exec->run(batch_par_ilu::make_initialize_batch_l_and_batch_u(
-        sys_csr_smart.get(), l_factor_.get(), u_factor_.get(),
+        sys_csr, l_factor_.get(), u_factor_.get(),
         l_col_holders.get_const_data(), u_col_holders.get_const_data()));
 
     std::vector<IndexType> dependencies_vec;
     Array<IndexType> nz_ptrs(exec->get_master(), nnz + 1);
 
-    batch_par_ilu::create_dependency_graph(exec, sys_csr_smart.get(),
-                                           l_factor_.get(), u_factor_.get(),
-                                           dependencies_vec, nz_ptrs);
+    batch_par_ilu::create_dependency_graph(exec, sys_csr, l_factor_.get(),
+                                           u_factor_.get(), dependencies_vec,
+                                           nz_ptrs);
 
     Array<IndexType> dependencies(exec, dependencies_vec.size());
     exec->copy_from(exec->get_master().get(), dependencies_vec.size(),
@@ -260,9 +258,8 @@ void BatchParIlu<ValueType, IndexType>::generate(
     nz_ptrs.set_executor(exec);
 
     exec->run(batch_par_ilu::make_compute_par_ilu0(
-        sys_csr_smart.get(), l_factor_.get(), u_factor_.get(),
-        parameters_.num_sweeps, dependencies.get_const_data(),
-        nz_ptrs.get_const_data()));
+        sys_csr, l_factor_.get(), u_factor_.get(), parameters_.num_sweeps,
+        dependencies.get_const_data(), nz_ptrs.get_const_data()));
 }
 
 

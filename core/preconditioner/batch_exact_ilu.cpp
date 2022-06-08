@@ -84,7 +84,6 @@ void BatchExactIlu<ValueType, IndexType>::generate(
         sys_csr = a_matrix.get();
     }
 
-    std::shared_ptr<const matrix_type> sys_csr_smart(sys_csr);
 
     const auto nbatch = sys_csr->get_num_batch_entries();
     const auto nrows = sys_csr->get_size().at(0)[0];
@@ -92,10 +91,9 @@ void BatchExactIlu<ValueType, IndexType>::generate(
 
 
     if (parameters_.skip_sorting == false) {
-        std::shared_ptr<matrix_type> temp_sys_csr_smart =
-            gko::clone(this->get_executor(), sys_csr_smart);
-        temp_sys_csr_smart->sort_by_column_index();
-        sys_csr_smart = temp_sys_csr_smart;
+        matrix_type* temp_sys_csr = gko::clone(this->get_executor(), sys_csr);
+        temp_sys_csr->sort_by_column_index();
+        sys_csr = temp_sys_csr;
     }
 
 
@@ -119,7 +117,7 @@ void BatchExactIlu<ValueType, IndexType>::generate(
         throw std::runtime_error("Matrix does not have all diagonal entries!");
     }
 
-    this->factorized_mat_ = gko::clone(this->get_executor(), sys_csr_smart);
+    this->factorized_mat_ = gko::clone(this->get_executor(), sys_csr);
     this->diag_locations_ = gko::Array<index_type>(this->get_executor(), nrows);
 
     exec->run(batch_exact_ilu::make_find_diag_locs(first_csr.get(),
