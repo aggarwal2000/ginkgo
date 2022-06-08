@@ -77,7 +77,7 @@ void generate_common_pattern_to_fill_l_and_u(
     const size_type num_rows = first_sys_mat->get_size()[0];
     const size_type num_warps = num_rows;
     const size_type num_blocks =
-        num_warps / (default_block_size / config::warp_size);
+        ceildiv(num_warps, ceildiv(default_block_size, config::warp_size));
 
     generate_common_pattern_to_fill_L_and_U<<<num_blocks, default_block_size>>>(
         static_cast<int>(num_rows), first_sys_mat->get_const_row_ptrs(),

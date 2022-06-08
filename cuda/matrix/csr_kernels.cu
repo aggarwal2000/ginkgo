@@ -1294,7 +1294,7 @@ void check_diagonal_entries_exist(
     const size_type num_warps = mtx->get_size()[0];
     if (num_warps > 0) {
         const size_type num_blocks =
-            num_warps / (default_block_size / config::warp_size);
+            ceildiv(num_warps, ceildiv(default_block_size, config::warp_size));
         Array<bool> has_diags(exec, {true});
         kernel::check_diagonal_entries<<<num_blocks, default_block_size>>>(
             static_cast<IndexType>(
@@ -1346,7 +1346,7 @@ void find_diagonal_entries_locations(
     }
 
     const size_type num_blocks =
-        num_warps / (default_block_size / config::warp_size);
+        ceildiv(num_warps, ceildiv(default_block_size, config::warp_size));
 
     kernel::find_diagonal_locations<<<num_blocks, default_block_size>>>(
         static_cast<IndexType>(
