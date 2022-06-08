@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined GKO_COMPILING_CUDA
 
+#include "cuda/base/types.hpp"
 #include "cuda/components/cooperative_groups.cuh"
 #include "cuda/log/batch_loggers.cuh"
 #include "cuda/matrix/batch_struct.hpp"

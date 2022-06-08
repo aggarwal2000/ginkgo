@@ -31,6 +31,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
 
+namespace {
+
+// load and store functions by written by Tobias
+// (cuda/solver/common_trs_kernels.cuh)
+template <typename ValueType, typename IndexType>
+__device__ __forceinline__
+    std::enable_if_t<std::is_floating_point<ValueType>::value, ValueType>
+    load(const ValueType* values, IndexType index)
+{
+    const volatile ValueType* val = values + index;
+    return *val;
+}
+
+template <typename ValueType, typename IndexType>
+__device__ __forceinline__ std::enable_if_t<
+    std::is_floating_point<ValueType>::value, thrust::complex<ValueType>>
+load(const thrust::complex<ValueType>* values, IndexType index)
+{
+    auto real = reinterpret_cast<const ValueType*>(values);
+    auto imag = real + 1;
+    return {load(real, 2 * index), load(imag, 2 * index)};
+}
+
+template <typename ValueType, typename IndexType>
+__device__ __forceinline__ void store(
+    ValueType* values, IndexType index,
+    std::enable_if_t<std::is_floating_point<ValueType>::value, ValueType> value)
+{
+    volatile ValueType* val = values + index;
+    *val = value;
+}
+
+template <typename ValueType, typename IndexType>
+__device__ __forceinline__ void store(thrust::complex<ValueType>* values,
+                                      IndexType index,
+                                      thrust::complex<ValueType> value)
+{
+    auto real = reinterpret_cast<ValueType*>(values);
+    auto imag = real + 1;
+    store(real, 2 * index, value.real());
+    store(imag, 2 * index, value.imag());
+}
+
+}  // namespace
+
 /**
  * Batch parilu0 preconditioner class.
  *
@@ -92,6 +137,7 @@ public:
         work_ = work;
     }
 
+    /*
     __device__ __forceinline__ void apply(const int num_rows,
                                           const ValueType* const __restrict__ r,
                                           ValueType* const __restrict__ z) const
@@ -138,47 +184,120 @@ public:
                 z[row_idx] = (work_[row_idx] - sum) / U_values[row_st];
             }
         }
-    }
-
-    /*
-    __device__ __forceinline__ void apply(
-        const int num_rows, const ValueType* const __restrict__ r,
-        volatile ValueType* const __restrict__ z) const
-    {
-       //  if(threadIdx.x == 0)
-       // printf("\n Apply- parilu0 precond apply - yet to be implemented");
-
-         // vec_hat = precond * vec
-         // => L * U  * vec_hat = vec
-         // => L * y = vec , find y , and then U * vec_hat = y, find vec_hat
-
-         //sparse triangular solves
-
-         //if we want to use the busy waiting while loop approach, then the
-         // num_rows should be <= threadblock size, else there is possibility of
-    a
-         // deadlock !
-         assert(num_rows <= blockDim.x);
-         //TODO: For upper trsv, use thread 0 for the bottommost row, this way
-       //  we could avoid :  assert(num_rows <= blockDim.x), as there won't be a
-       //  possibility of deadlock then!
-
-         volatile ValueType* const __restrict__ temp_vec = work_;
-
-         for(int i = threadIdx.x ; i < num_rows; i += blockDim.x)
-         {
-             temp_vec[i] = 1.8/0; //TODO: find a better way to deal with this!
-             z[i] = 1.3/0;
-
-         }
-         __syncthreads();
-
-         legacy_sparse_lower_trsv(r,temp_vec);
-         __syncthreads();
-
-         legacy_sparse_upper_trsv(temp_vec, z);
-
     }*/
+
+
+    __device__ __forceinline__ void apply(const int num_rows,
+                                          const ValueType* const __restrict__ r,
+                                          ValueType* const __restrict__ z) const
+    {
+        // z = precond * r i.e.  L * U * z = r
+        // sparse triangular solves
+        // L * work_ = r  (find work_) Note: L is in sorted order
+        // U * z = work_  (then find z)  Note: U is in sorted order
+
+        const int* const __restrict__ L_row_ptrs = l_entry_.row_ptrs;
+        const int* const __restrict__ L_col_idxs = l_entry_.col_idxs;
+        const ValueType* const __restrict__ L_values = l_entry_.values;
+        const int* const __restrict__ U_row_ptrs = u_entry_.row_ptrs;
+        const int* const __restrict__ U_col_idxs = u_entry_.col_idxs;
+        const ValueType* const __restrict__ U_values = u_entry_.values;
+
+        /*
+       if (threadIdx.x == 0) {
+
+          for (int row_idx = 0; row_idx < num_rows; row_idx++) {
+              const int row_st = L_row_ptrs[row_idx];
+              const int row_end = L_row_ptrs[row_idx + 1];
+
+              ValueType sum{0};
+
+              for (int i = row_st; i < row_end - 1; i++) {
+                  const int col_idx = L_col_idxs[i];
+                  sum += L_values[i] * work_[col_idx];
+              }
+
+              work_[row_idx] = (r[row_idx] - sum) / L_values[row_end - 1];
+          }
+
+          for (int row_idx = num_rows - 1; row_idx >= 0; row_idx--) {
+              const int row_st = U_row_ptrs[row_idx];
+              const int row_end = U_row_ptrs[row_idx + 1];
+
+              ValueType sum{0};
+
+              for (int i = row_end - 1; i > row_st; i--) {
+                  const int col_idx = U_col_idxs[i];
+                  sum += U_values[i] * z[col_idx];
+              }
+
+              z[row_idx] = (work_[row_idx] - sum) / U_values[row_st];
+          }
+
+       }*/
+
+        for (int i = threadIdx.x; i < num_rows; i += blockDim.x) {
+            store(work_, i, nan<ValueType>());
+            store(z, i, nan<ValueType>());
+        }
+        __syncthreads();
+
+        int row_index = threadIdx.x;
+
+        if (row_index < num_rows) {
+            ValueType sum = zero<ValueType>();
+
+            const int start = L_row_ptrs[row_index];
+            const int end = L_row_ptrs[row_index + 1] - 1;
+            int i = start;
+
+            bool completed = false;
+
+            while (!completed) {
+                const int col_index = L_col_idxs[i];
+                if (i < end && is_finite(load(work_, col_index))) {
+                    sum += L_values[i] * load(work_, col_index);
+                    i++;
+                }
+
+                if (i == end) {
+                    ValueType val = (r[row_index] - sum) / L_values[end];
+                    store(work_, row_index, val);
+                    completed = true;
+                }
+            }
+        }
+
+        __syncthreads();
+
+
+        row_index = num_rows - 1 - threadIdx.x;
+
+        if (row_index >= 0) {
+            ValueType sum = zero<ValueType>();
+
+            const int start = U_row_ptrs[row_index];
+            const int end = U_row_ptrs[row_index + 1] - 1;
+            int i = end;
+
+            bool completed = false;
+
+            while (!completed) {
+                const int col_index = U_col_idxs[i];
+
+                if (i > start && is_finite(load(z, col_index))) {
+                    sum += U_values[i] * load(z, col_index);
+                    i--;
+                }
+
+                if (i == start) {
+                    ValueType val = (work_[row_index] - sum) / U_values[start];
+                    store(z, row_index, val);
+                    completed = true;
+                }
+            }
+        }
+    }
 
 
 private:
@@ -187,91 +306,4 @@ private:
     gko::batch_csr::BatchEntry<const value_type> l_entry_;
     gko::batch_csr::BatchEntry<const value_type> u_entry_;
     ValueType* __restrict__ work_;
-
-    /*
-    __device__ __forceinline__ void legacy_sparse_lower_trsv(const ValueType*
-    const __restrict__ input_vec, volatile ValueType* const __restrict__
-    output_vec)
-    {
-        const int num_rows = l_entry_.num_rows;
-        const int* const __restrict__ L_row_ptrs = l_entry_.row_ptrs;
-        const int* const __restrict__ L_col_idxs = l_entry_.col_idxs;
-        const ValueType* const __restrict__ L_values = l_entry_.values;
-
-        const int row_index = threadIdx.x;
-
-        if(row_index >= num_rows)
-        {
-            return;
-        }
-
-        ValueType sum = zero<ValueType>();
-
-        const int start = L_row_ptrs[row_index];
-        const int end = L_row_ptrs[row_index + 1] - 1;
-        int i = start;
-
-        bool completed = false;
-
-        while(!completed)
-        {
-            const int col_index = L_col_idxs[i];
-
-            if( i < end  &&  isfinite(output_vec[col_index]))
-            {
-                sum += L_values[i] * output_vec[col_index];
-                i++;
-            }
-
-            if(i == end)
-            {
-                output_vec[row_index] = (input_vec[row_index] -
-    sum)/L_values[end]; completed = true;
-            }
-        }
-    }
-
-    __device__ __forceinline__ void legacy_sparse_upper_trsv(volatile const
-    ValueType* const __restrict__ input_vec, volatile ValueType* const
-    __restrict__ output_vec)
-    {
-        const int num_rows = u_entry_.num_rows;
-        const int* const __restrict__ U_row_ptrs = u_entry_.row_ptrs;
-        const int* const __restrict__ U_col_idxs = u_entry_.col_idxs;
-        const ValueType* const __restrict__ U_values = u_entry_.values;
-
-        const int row_index = threadIdx.x;
-
-        if(row_index >= num_rows)
-        {
-            return;
-        }
-
-        ValueType sum = zero<ValueType>();
-
-        const int start = U_row_ptrs[row_index];
-        const int end = U_row_ptrs[row_index + 1]  - 1;
-        int i = end;
-
-        bool completed = false;
-
-        while(!completed )
-        {
-            const int col_index = U_col_idxs[i];
-
-            if( i > start && isfinite(output_vec[col_index]))
-            {
-                sum += U_values[i] * output_vec[col_index];
-                i--;
-            }
-
-            if(i == start)
-            {
-                output_vec[row_index] = (input_vec[row_index] -
-    sum)/U_values[start]; completed = true;
-            }
-
-        }
-
-    }*/
 };
