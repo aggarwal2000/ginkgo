@@ -68,8 +68,8 @@ public:
         size_type batch_id, const gko::batch_csr::BatchEntry<const ValueType>&,
         ValueType* const __restrict__ work)
     {
-        auto l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
-        auto u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
+        l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
+        u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
         work_ = work;
     }
 
@@ -77,8 +77,8 @@ public:
         size_type batch_id, const gko::batch_ell::BatchEntry<const ValueType>&,
         ValueType* const __restrict__ work)
     {
-        auto l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
-        auto u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
+        l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
+        u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
         work_ = work;
     }
 
@@ -87,8 +87,8 @@ public:
         const gko::batch_dense::BatchEntry<const ValueType>&,
         ValueType* const __restrict__ work)
     {
-        auto l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
-        auto u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
+        l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
+        u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
         work_ = work;
     }
 
@@ -105,8 +105,6 @@ public:
         const ValueType* const __restrict__ U_values = u_entry_.values;
 
         if (threadIdx.x == 0) {
-            printf("TODO- TRSV");
-
             // L * work_ = r
             // Note: L is in sorted order
             for (int row_idx = 0; row_idx < num_rows; row_idx++) {
@@ -126,7 +124,6 @@ public:
                 printf("\n work at row idx: %d ", row_idx);
             }
 
-            printf("Lower TRSV done");
 
             // U * z = work_
             // note: U is in sorted order
@@ -143,8 +140,6 @@ public:
 
                 z[row_idx] = (work_[row_idx] - sum) / U_values[row_st];
             }
-
-            printf("Upper TRSV done");
         }
     }
 

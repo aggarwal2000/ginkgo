@@ -69,7 +69,7 @@ public:
         size_type batch_id, const gko::batch_csr::BatchEntry<const ValueType>&,
         ValueType* const __restrict__ work)
     {
-        auto factored_mat_entry_ =
+        factored_mat_entry_ =
             gko::batch::batch_entry(factored_mat_batch_, batch_id);
         work_ = work;
     }
@@ -78,7 +78,7 @@ public:
         size_type batch_id, const gko::batch_ell::BatchEntry<const ValueType>&,
         ValueType* const __restrict__ work)
     {
-        auto factored_mat_entry_ =
+        factored_mat_entry_ =
             gko::batch::batch_entry(factored_mat_batch_, batch_id);
         work_ = work;
     }
@@ -88,7 +88,7 @@ public:
         const gko::batch_dense::BatchEntry<const ValueType>&,
         ValueType* const __restrict__ work)
     {
-        auto factored_mat_entry_ =
+        factored_mat_entry_ =
             gko::batch::batch_entry(factored_mat_batch_, batch_id);
         work_ = work;
     }
@@ -138,10 +138,6 @@ public:
                                           const ValueType* const __restrict__ r,
                                           ValueType* const __restrict__ z) const
     {
-        if (threadIdx.x == 0)
-            printf(
-                "\n Apply- exact ilu0 precond apply - yet to be implemented");
-
         const int* const __restrict__ row_ptrs = factored_mat_entry_.row_ptrs;
         const int* const __restrict__ col_idxs = factored_mat_entry_.col_idxs;
         const ValueType* const __restrict__ factored_values_entry =
