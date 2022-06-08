@@ -108,20 +108,17 @@ public:
             // L * work_ = r
             // Note: L is in sorted order
             for (int row_idx = 0; row_idx < num_rows; row_idx++) {
-                printf("\n row idx: %d", row_idx);
                 const int row_st = L_row_ptrs[row_idx];
                 const int row_end = L_row_ptrs[row_idx + 1];
 
                 ValueType sum{0};
 
                 for (int i = row_st; i < row_end - 1; i++) {
-                    printf("\n i: %d", i);
                     const int col_idx = L_col_idxs[i];
                     sum += L_values[i] * work_[col_idx];
                 }
 
                 work_[row_idx] = (r[row_idx] - sum) / L_values[row_end - 1];
-                printf("\n work at row idx: %d ", row_idx);
             }
 
 
