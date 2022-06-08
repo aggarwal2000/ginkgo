@@ -89,11 +89,11 @@ void BatchExactIlu<ValueType, IndexType>::generate(
     const auto nrows = sys_csr->get_size().at(0)[0];
     const auto nnz = sys_csr->get_num_stored_elements() / nbatch;
 
-
+    std::shared_ptr<matrix_type> temp_sys_csr_smart;
     if (parameters_.skip_sorting == false) {
-        matrix_type* temp_sys_csr = gko::clone(this->get_executor(), sys_csr);
-        temp_sys_csr->sort_by_column_index();
-        sys_csr = temp_sys_csr;
+        temp_sys_csr_smart = gko::clone(this->get_executor(), sys_csr);
+        temp_sys_csr_smart->sort_by_column_index();
+        sys_csr = temp_sys_csr_smart.get();
     }
 
 
