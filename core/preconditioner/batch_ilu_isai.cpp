@@ -69,7 +69,8 @@ void BatchIluIsai<ValueType, IndexType>::generate(
         sys_csr = a_matrix.get();
     }
 
-    std::shared_ptr<const matrix_type> sys_csr_smart(sys_csr);
+    std::shared_ptr<const matrix_type> sys_csr_smart(
+        sys_csr, [](const matrix_type* plain_ptr) {});
 
     std::shared_ptr<const batch_csr> l_factor;
     std::shared_ptr<const batch_csr> u_factor;
