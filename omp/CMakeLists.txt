@@ -31,6 +31,7 @@ target_sources(ginkgo_omp
     matrix/sellp_kernels.cpp
     matrix/sparsity_csr_kernels.cpp
     preconditioner/batch_exact_ilu_kernels.cpp
+    preconditioner/batch_isai_kernels.cpp
     preconditioner/batch_identity_kernels.cpp
     preconditioner/batch_ilu_kernels.cpp
     preconditioner/batch_jacobi_kernels.cpp

@@ -70,6 +70,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/preconditioner/batch_exact_ilu_kernels.hpp"
 #include "core/preconditioner/batch_identity_kernels.hpp"
 #include "core/preconditioner/batch_ilu_kernels.hpp"
+#include "core/preconditioner/batch_isai_kernels.hpp"
 #include "core/preconditioner/batch_jacobi_kernels.hpp"
 #include "core/preconditioner/batch_par_ilu_kernels.hpp"
 #include "core/preconditioner/isai_kernels.hpp"
@@ -1199,6 +1200,17 @@ GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
 GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_PAR_ILU_APPLY_KERNEL);
 
 }  // namespace batch_par_ilu
+
+
+namespace batch_isai {
+
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ISAI_EXTRACT_DENSE_LINEAR_SYSTEM_PATTERN_KERNEL);
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ISAI_FILL_VALUES_DENSE_MATRIX_AND_SOLVE_KERNEL);
+GKO_STUB_VALUE_TYPE_AND_INT32_INDEX(GKO_DECLARE_BATCH_ISAI_APPLY_KERNEL);
+
+}  // namespace batch_isai
 
 
 namespace batch_identity {

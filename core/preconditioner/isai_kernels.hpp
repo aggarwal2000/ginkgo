@@ -108,5 +108,51 @@ GKO_DECLARE_FOR_ALL_EXECUTOR_NAMESPACES(isai, GKO_DECLARE_ALL_AS_TEMPLATES);
 }  // namespace kernels
 }  // namespace gko
 
+namespace gko {
+namespace preconditioner {
+namespace {
+/**
+ * Helper function that extends the sparsity pattern of the matrix M to M^n
+ * without changing its values.
+ *
+ * The input matrix must be sorted and on the correct executor for this to work.
+ * If `power` is 1, the matrix will be returned unchanged.
+ */
+template <typename Csr>
+std::shared_ptr<Csr> extend_sparsity(std::shared_ptr<const Executor>& exec,
+                                     std::shared_ptr<const Csr> mtx, int power)
+{
+    GKO_ASSERT_EQ(power >= 1, true);
+    if (power == 1) {
+        // copy the matrix, as it will be used to store the inverse
+        return {std::move(mtx->clone())};
+    }
+    auto id_power = mtx->clone();
+    auto tmp = Csr::create(exec, mtx->get_size());
+    // accumulates mtx * the remainder from odd powers
+    auto acc = mtx->clone();
+    // compute id^(n-1) using square-and-multiply
+    int i = power - 1;
+    while (i > 1) {
+        if (i % 2 != 0) {
+            // store one power in acc:
+            // i^(2n+1) -> i*i^2n
+            id_power->apply(lend(acc), lend(tmp));
+            std::swap(acc, tmp);
+            i--;
+        }
+        // square id_power: i^2n -> (i^2)^n
+        id_power->apply(lend(id_power), lend(tmp));
+        std::swap(id_power, tmp);
+        i /= 2;
+    }
+    // combine acc and id_power again
+    id_power->apply(lend(acc), lend(tmp));
+    return {std::move(tmp)};
+}
+
+}  // unnamed namespace
+}  // namespace preconditioner
+}  // namespace gko
 
 #endif  // GKO_CORE_PRECONDITIONER_ISAI_KERNELS_HPP_
