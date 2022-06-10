@@ -104,6 +104,7 @@ void extract_and_solve_csr_linear_sys(
         count_matches_per_row_for_all_csr_sys.get_data(),
         large_csr_linear_sys_nnz.get_data()));
 
+
     // TODO: Avoid extra copy by using views if exec is Refernce/Omp executor
     // (i.e. use a copy only when exec's allocation space is different than that
     // of exec->master())
@@ -153,6 +154,10 @@ void extract_and_solve_csr_linear_sys(
             Array<IndexType>::view(exec, nnz_csr_sys,
                                    large_csr_system->get_col_idxs());
 
+        // NOTE: IndexType (in place of ValueType) causing problems
+        // No explicit instantiation for that, so such CSR matrix class is not
+        // available
+        /*
         // create a csr matrix which does not deallocate the 3 arrays (row_ptrs,
         // col_idxs and vals)
         std::shared_ptr<matrix::Csr<IndexType, IndexType>> csr_pattern_matrix =
@@ -166,6 +171,7 @@ void extract_and_solve_csr_linear_sys(
         // double free error)
 
         csr_pattern_matrix->transpose();
+        */
 
         exec->run(batch_isai::make_csr_fill_values_using_pattern(
             values_pattern_large_csr_system.get_const_data(),
@@ -179,7 +185,8 @@ void extract_and_solve_csr_linear_sys(
         std::shared_ptr<batch_dense> x_batch = gko::share(
             batch_dense::create(exec, batch_dim<2>(nbatch, dim<2>(i_size, 1))));
         exec->run(batch_isai::make_initialize_batched_rhs_and_sol(
-            rhs_one_idxs_host.get_const_data()[i_row_idx], rhs_batch, x_batch));
+            rhs_one_idxs_host.get_const_data()[i_row_idx], rhs_batch.get(),
+            x_batch.get()));
 
         if (sys_matrix_type ==
             gko::preconditioner::batch_isai_sys_mat_type::lower_tri) {
@@ -290,11 +297,13 @@ void BatchIsai<ValueType, IndexType>::generate(
         rhs_one_idxs.get_const_data(), sizes.get_const_data(),
         this->parameters_.matrix_type_isai));
 
-    batch_isai::extract_and_solve_csr_linear_sys(
-        exec, sys_csr, sizes, rhs_one_idxs, this->parameters_.matrix_type_isai,
-        count_matches_per_row_for_all_csr_sys, large_csr_linear_sys_nnz,
-        this->left_isai_.get());
+    // batch_isai::extract_and_solve_csr_linear_sys(
+    //     exec, sys_csr, sizes, rhs_one_idxs,
+    //     this->parameters_.matrix_type_isai,
+    //     count_matches_per_row_for_all_csr_sys, large_csr_linear_sys_nnz,
+    //     this->left_isai_.get());
 }
+
 
 template <typename ValueType, typename IndexType>
 std::unique_ptr<BatchLinOp> BatchIsai<ValueType, IndexType>::transpose() const
@@ -309,6 +318,9 @@ std::unique_ptr<BatchLinOp> BatchIsai<ValueType, IndexType>::conj_transpose()
     GKO_NOT_IMPLEMENTED;
 }
 
+
+#define GKO_DECLARE_BATCH_ISAI(ValueType) class BatchIsai<ValueType, int32>
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_BATCH_ISAI);
 
 }  // namespace preconditioner
 }  // namespace gko

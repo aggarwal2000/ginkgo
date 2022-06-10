@@ -164,6 +164,12 @@ __global__
                                           do_this_on_match);
 
             } else {
+                // TODO: Remove this printf and false assert statement (and
+                // complete ISAI extension kernels)
+                printf("\n Batched ISAI does not support nnz per row > %d yet.",
+                       row_size_limit);
+                assert(false);
+
                 group_match<subwarp_size>(laiA_col_idxs, i_st, i_end,
                                           A_col_idxs, m_st, m_end, subwarpgrp,
                                           count_matches);
