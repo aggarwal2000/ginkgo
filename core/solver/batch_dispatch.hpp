@@ -106,6 +106,7 @@ using DeviceValueType = ValueType;
 #include "reference/preconditioner/batch_identity.hpp"
 #include "reference/preconditioner/batch_ilu.hpp"
 #include "reference/preconditioner/batch_ilu_isai.hpp"
+#include "reference/preconditioner/batch_isai.hpp"
 #include "reference/preconditioner/batch_jacobi.hpp"
 #include "reference/preconditioner/batch_par_ilu.hpp"
 #include "reference/preconditioner/batch_trsv.hpp"
@@ -276,9 +277,12 @@ public:
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
             const auto left_approx_inv = device::get_batch_struct(
                 prec->get_const_left_approximate_inverse().get());
-            // TODO: Define device preconditioners, add the includes to files
-            //  like cuda/preconditioner/batch_preconditioners.cuh, and add a
-            //  dispatch.
+
+            dispatch_on_stop(
+                logger, amat,
+                device::batch_isai<device_value_type>(left_approx_inv), b_b,
+                x_b);
+
             GKO_NOT_IMPLEMENTED;
         } else {
             GKO_NOT_IMPLEMENTED;

@@ -86,11 +86,11 @@ public:
                   const gko::batch_csr::BatchEntry<const ValueType>&,
                   ValueType* const __restrict__ work)
     {
-        auto l_left_inv_entry_ =
+        l_left_inv_entry_ =
             gko::batch::batch_entry(l_left_inv_batch_, batch_id);
-        auto u_left_inv_entry_ =
+        u_left_inv_entry_ =
             gko::batch::batch_entry(u_left_inv_batch_, batch_id);
-        auto mult_inv_entry_ =
+        mult_inv_entry_ =
             gko::batch::batch_entry(mult_inv_batch_, batch_id);  // maybe null
         work_ = work;
     }
@@ -99,11 +99,11 @@ public:
                   const gko::batch_ell::BatchEntry<const ValueType>&,
                   ValueType* const __restrict__ work)
     {
-        auto l_left_inv_entry_ =
+        l_left_inv_entry_ =
             gko::batch::batch_entry(l_left_inv_batch_, batch_id);
-        auto u_left_inv_entry_ =
+        u_left_inv_entry_ =
             gko::batch::batch_entry(u_left_inv_batch_, batch_id);
-        auto mult_inv_entry_ =
+        mult_inv_entry_ =
             gko::batch::batch_entry(mult_inv_batch_, batch_id);  // maybe null
         work_ = work;
     }
@@ -112,11 +112,11 @@ public:
                   const gko::batch_dense::BatchEntry<const ValueType>&,
                   ValueType* const __restrict__ work)
     {
-        auto l_left_inv_entry_ =
+        l_left_inv_entry_ =
             gko::batch::batch_entry(l_left_inv_batch_, batch_id);
-        auto u_left_inv_entry_ =
+        u_left_inv_entry_ =
             gko::batch::batch_entry(u_left_inv_batch_, batch_id);
-        auto mult_inv_entry_ =
+        mult_inv_entry_ =
             gko::batch::batch_entry(mult_inv_batch_, batch_id);  // maybe null
         work_ = work;
     }

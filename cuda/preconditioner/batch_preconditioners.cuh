@@ -47,6 +47,7 @@ namespace cuda {
 #include "common/cuda_hip/preconditioner/batch_identity.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_ilu.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_ilu_isai.hpp.inc"
+#include "common/cuda_hip/preconditioner/batch_isai.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_jacobi.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_par_ilu.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_trsv.hpp.inc"

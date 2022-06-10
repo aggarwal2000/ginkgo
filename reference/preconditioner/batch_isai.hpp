@@ -30,8 +30,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#ifndef GKO_REFERENCE_PRECONDITIONER_BATCH_PAR_ILU_HPP_
-#define GKO_REFERENCE_PRECONDITIONER_BATCH_PAR_ILU_HPP_
+#ifndef GKO_REFERENCE_PRECONDITIONER_BATCH_ISAI_HPP_
+#define GKO_REFERENCE_PRECONDITIONER_BATCH_ISAI_HPP_
 
 
 #include "core/matrix/batch_struct.hpp"
@@ -44,70 +44,63 @@ namespace host {
 
 
 template <typename ValueType>
-class batch_parilu0 final {
+class batch_isai final {
 public:
     using value_type = ValueType;
 
 
     /**
-     * @param l_batch  Lower triangular factor that was externally generated.
-     * @param u_batch  Upper triangular factor that was externally generated.
+     * @param left_isai_batch  left incomplete sparse approx. inverse that was
+     * externally generated.
      */
-    batch_parilu0(const gko::batch_csr::UniformBatch<const ValueType>& l_batch,
-                  const gko::batch_csr::UniformBatch<const ValueType>& u_batch)
-        : l_batch_{l_batch}, u_batch_{u_batch}
+    batch_isai(
+        const gko::batch_csr::UniformBatch<const ValueType>& left_isai_batch)
+        : left_isai_batch_{left_isai_batch}
     {}
+
 
     /**
      * The size of the work vector required per batch entry. (takes into account
      * both- generation and application)
      */
-    static constexpr int dynamic_work_size(int nrows, int nnz) { return nrows; }
+    static constexpr int dynamic_work_size(int nrows, int nnz) { return 0; }
+
 
     /**
      * Complete the precond generation process.
      *
-     * @param mat  Matrix for which to build an ILU-type preconditioner.
+     * @param mat  Matrix for which to build an ILU-ISAI preconditioner.
      */
     void generate(size_type batch_id,
                   const gko::batch_csr::BatchEntry<const ValueType>&,
-                  ValueType* const __restrict__ work)
+                  ValueType* const)
     {
-        l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
-        u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
-        work_ = work;
+        left_isai_entry_ = gko::batch::batch_entry(left_isai_batch_, batch_id);
     }
 
     void generate(size_type batch_id,
                   const gko::batch_ell::BatchEntry<const ValueType>&,
-                  ValueType* const __restrict__ work)
+                  ValueType* const)
     {
-        l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
-        u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
-        work_ = work;
+        left_isai_entry_ = gko::batch::batch_entry(left_isai_batch_, batch_id);
     }
 
     void generate(size_type batch_id,
                   const gko::batch_dense::BatchEntry<const ValueType>&,
-                  ValueType* const __restrict__ work)
+                  ValueType* const)
     {
-        l_entry_ = gko::batch::batch_entry(l_batch_, batch_id);
-        u_entry_ = gko::batch::batch_entry(u_batch_, batch_id);
-        work_ = work;
+        left_isai_entry_ = gko::batch::batch_entry(left_isai_batch_, batch_id);
     }
+
 
     void apply(const gko::batch_dense::BatchEntry<const ValueType>& r,
                const gko::batch_dense::BatchEntry<ValueType>& z) const
-        // TODO: Implement lower and upper trsv (this uses the work
-        // array)
         GKO_NOT_IMPLEMENTED;
 
+
 private:
-    const gko::batch_csr::UniformBatch<const value_type> l_batch_;
-    const gko::batch_csr::UniformBatch<const value_type> u_batch_;
-    gko::batch_csr::BatchEntry<const value_type> l_entry_;
-    gko::batch_csr::BatchEntry<const value_type> u_entry_;
-    ValueType* __restrict__ work_;
+    const gko::batch_csr::UniformBatch<const value_type> left_isai_batch_;
+    gko::batch_csr::BatchEntry<const value_type> left_isai_entry_;
 };
 
 
@@ -115,4 +108,4 @@ private:
 }  // namespace kernels
 }  // namespace gko
 
-#endif  // GKO_REFERENCE_PRECONDITIONER_BATCH_PAR_ILU_HPP_
+#endif  // GKO_REFERENCE_PRECONDITIONER_BATCH_ISAI_HPP_

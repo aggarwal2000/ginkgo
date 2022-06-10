@@ -75,7 +75,7 @@ public:
                   const gko::batch_csr::BatchEntry<const ValueType>&,
                   ValueType* const __restrict__ work)
     {
-        auto factored_mat_entry_ =
+        factored_mat_entry_ =
             gko::batch::batch_entry(factored_mat_batch_, batch_id);
         work_ = work;
     }
@@ -84,7 +84,7 @@ public:
                   const gko::batch_ell::BatchEntry<const ValueType>&,
                   ValueType* const __restrict__ work)
     {
-        auto factored_mat_entry_ =
+        factored_mat_entry_ =
             gko::batch::batch_entry(factored_mat_batch_, batch_id);
         work_ = work;
     }
@@ -93,7 +93,7 @@ public:
                   const gko::batch_dense::BatchEntry<const ValueType>&,
                   ValueType* const __restrict__ work)
     {
-        auto factored_mat_entry_ =
+        factored_mat_entry_ =
             gko::batch::batch_entry(factored_mat_batch_, batch_id);
         work_ = work;
     }
