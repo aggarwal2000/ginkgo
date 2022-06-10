@@ -31,8 +31,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
 #include <ginkgo/core/preconditioner/batch_isai.hpp>
+#include <ginkgo/core/preconditioner/batch_jacobi.hpp>
+#include <ginkgo/core/solver/batch_bicgstab.hpp>
 
 #include "core/matrix/batch_csr_kernels.hpp"
+#include "core/matrix/csr_kernels.hpp"
 #include "core/preconditioner/batch_isai_kernels.hpp"
 #include "core/preconditioner/isai_kernels.hpp"
 
@@ -41,15 +44,35 @@ namespace preconditioner {
 namespace batch_isai {
 namespace {
 
+
+GKO_REGISTER_OPERATION(extract_dense_linear_sys_pattern,
+                       batch_isai::extract_dense_linear_sys_pattern);
+GKO_REGISTER_OPERATION(fill_values_dense_mat_and_solve,
+                       batch_isai::fill_values_dense_mat_and_solve);
+
+
+GKO_REGISTER_OPERATION(find_cumulative_nnz_csr_matrices,
+                       batch_isai::find_cumulative_nnz_csr_matrices);
+GKO_REGISTER_OPERATION(
+    set_row_ptrs_csr_matrix_and_extract_csr_pattern,
+    batch_isai::set_row_ptrs_csr_matrix_and_extract_csr_pattern);
+GKO_REGISTER_OPERATION(csr_fill_values_using_pattern,
+                       batch_isai::csr_fill_values_using_pattern);
+GKO_REGISTER_OPERATION(initialize_batched_rhs_and_sol,
+                       batch_isai::initialize_batched_rhs_and_sol);
+GKO_REGISTER_OPERATION(write_large_sys_solution_to_inverse,
+                       batch_isai::write_large_sys_solution_to_inverse);
+
+
 template <typename ValueType, typename IndexType>
 void allocate_memory_and_set_row_ptrs_and_col_idxs_according_to_the_chosen_spy_pattern(
+    std::shared_ptr<const Executor> exec,
     std::shared_ptr<const matrix::Csr<ValueType, IndexType>> first_sys_csr,
     const int spy_power, const size_type nbatch,
     std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>>& left_isai)
 {
     using csr = matrix::Csr<ValueType, IndexType>;
     using batch_csr = matrix::BatchCsr<ValueType, IndexType>;
-    auto exec = first_sys_csr->get_executor();
 
     std::shared_ptr<csr> tmp =
         gko::preconditioner::extend_sparsity(exec, first_sys_csr, spy_power);
@@ -62,10 +85,134 @@ void allocate_memory_and_set_row_ptrs_and_col_idxs_according_to_the_chosen_spy_p
     exec->copy(nnz, tmp->get_const_col_idxs(), left_isai->get_col_idxs());
 }
 
-GKO_REGISTER_OPERATION(extract_dense_linear_sys_pattern,
-                       batch_isai::extract_dense_linear_sys_pattern);
-GKO_REGISTER_OPERATION(fill_values_dense_mat_and_solve,
-                       batch_isai::fill_values_dense_mat_and_solve);
+template <typename ValueType, typename IndexType>
+void extract_and_solve_csr_linear_sys(
+    std::shared_ptr<const Executor> exec,
+    const matrix::BatchCsr<ValueType, IndexType>* given_sys_csr_A,
+    const Array<int>& sizes, const Array<int>& rhs_one_idxs,
+    gko::preconditioner::batch_isai_sys_mat_type sys_matrix_type,
+    Array<int>& count_matches_per_row_for_all_csr_sys,
+    Array<int>& large_csr_linear_sys_nnz,
+    matrix::BatchCsr<ValueType, IndexType>* inv_A)
+{
+    using batch_csr = matrix::BatchCsr<ValueType, IndexType>;
+    using batch_dense = matrix::BatchDense<ValueType>;
+    using csr = matrix::Csr<ValueType, IndexType>;
+
+    exec->run(batch_isai::make_find_cumulative_nnz_csr_matrices(
+        inv_A, sizes.get_const_data(),
+        count_matches_per_row_for_all_csr_sys.get_data(),
+        large_csr_linear_sys_nnz.get_data()));
+
+    // TODO: Avoid extra copy by using views if exec is Refernce/Omp executor
+    // (i.e. use a copy only when exec's allocation space is different than that
+    // of exec->master())
+    const Array<int> large_csr_linear_sys_nnz_host(exec->get_master(),
+                                                   large_csr_linear_sys_nnz);
+    const Array<int> sizes_host(exec->get_master(), sizes);
+    const Array<int> rhs_one_idxs_host(exec->get_master(), rhs_one_idxs);
+
+    const auto nrows = given_sys_csr_A->get_size().at(0)[0];
+    const auto nbatch = given_sys_csr_A->get_num_batch_entries();
+
+    for (int i_row_idx = 0; i_row_idx < static_cast<int>(nrows); i_row_idx++) {
+        const int i_size = sizes_host.get_const_data()[i_row_idx];
+
+        if (i_size <= gko::kernels::batch_isai::row_size_limit) {
+            assert(large_csr_linear_sys_nnz_host.get_const_data()[i_row_idx] ==
+                   -1);
+            continue;
+        }
+
+        // std::cout << "Linear sys index: " << i_row_idx << " Extract and solve
+        // csr sys " << std::endl;
+        // Extract CSR pattern, transpose, fill vals and solve batched linear
+        // sys, write solution back to batched_inv
+
+        const int nnz_csr_sys =
+            large_csr_linear_sys_nnz_host.get_const_data()[i_row_idx];
+        std::shared_ptr<batch_csr> large_csr_system = share(batch_csr::create(
+            exec, nbatch, dim<2>(i_size, i_size), nnz_csr_sys));
+
+        Array<IndexType> values_pattern_large_csr_system(exec, nnz_csr_sys);
+
+        exec->run(
+            batch_isai::make_set_row_ptrs_csr_matrix_and_extract_csr_pattern(
+                i_size, i_row_idx, given_sys_csr_A, inv_A,
+                count_matches_per_row_for_all_csr_sys.get_const_data(),
+                large_csr_system.get(),
+                values_pattern_large_csr_system.get_data()));
+
+        Array<IndexType> values_pattern_large_csr_system_view =
+            Array<IndexType>::view(exec, nnz_csr_sys,
+                                   values_pattern_large_csr_system.get_data());
+        Array<IndexType> row_ptrs_large_csr_system_view =
+            Array<IndexType>::view(exec, i_size + 1,
+                                   large_csr_system->get_row_ptrs());
+        Array<IndexType> col_idxs_large_csr_system_view =
+            Array<IndexType>::view(exec, nnz_csr_sys,
+                                   large_csr_system->get_col_idxs());
+
+        // create a csr matrix which does not deallocate the 3 arrays (row_ptrs,
+        // col_idxs and vals)
+        std::shared_ptr<matrix::Csr<IndexType, IndexType>> csr_pattern_matrix =
+            gko::share(matrix::Csr<IndexType, IndexType>::create(
+                exec, dim<2>(i_size, i_size),
+                std::move(values_pattern_large_csr_system_view),
+                std::move(col_idxs_large_csr_system_view),
+                std::move(row_ptrs_large_csr_system_view)));
+        // null/view deletor of these arrays is also copied, right? - look at
+        // the Csr matrix and Array constructors(otheriwse, there would be a
+        // double free error)
+
+        csr_pattern_matrix->transpose();
+
+        exec->run(batch_isai::make_csr_fill_values_using_pattern(
+            values_pattern_large_csr_system.get_const_data(),
+            large_csr_system.get(), given_sys_csr_A));
+
+        // create and initialize batched rhs and sol x
+        std::shared_ptr<batch_dense> rhs_batch = gko::share(
+            batch_dense::create(exec, batch_dim<2>(nbatch, dim<2>(i_size, 1))));
+        assert(rhs_one_idxs_host->get_const_data()[i_row_idx] >= 0);
+        assert(i_size > rhs_one_idxs_host->get_const_data()[i_row_idx]);
+        std::shared_ptr<batch_dense> x_batch = gko::share(
+            batch_dense::create(exec, batch_dim<2>(nbatch, dim<2>(i_size, 1))));
+        exec->run(batch_isai::make_initialize_batched_rhs_and_sol(
+            rhs_one_idxs_host.get_const_data()[i_row_idx], rhs_batch, x_batch));
+
+        if (sys_matrix_type ==
+            gko::preconditioner::batch_isai_sys_mat_type::lower_tri) {
+            // call batched upper trsv (TODO: Implement upper triangular batched
+            // solver)
+            GKO_NOT_IMPLEMENTED;
+        } else if (sys_matrix_type ==
+                   gko::preconditioner::batch_isai_sys_mat_type::upper_tri) {
+            // call batched lower trsv (TODO: Implement lower triangular batched
+            // solver)
+            GKO_NOT_IMPLEMENTED;
+        } else if (sys_matrix_type ==
+                   gko::preconditioner::batch_isai_sys_mat_type::general) {
+            // call batched bicgstab solver with scalar jacobi preconditioner
+            auto jacobi_preconditioned_batch_bicgstab_solver =
+                gko::solver::BatchBicgstab<ValueType>::build()
+                    .with_preconditioner(
+                        gko::preconditioner::BatchJacobi<ValueType,
+                                                         IndexType>::build()
+                            .on(exec))
+                    .on(exec)
+                    ->generate(large_csr_system);
+
+            jacobi_preconditioned_batch_bicgstab_solver->apply(rhs_batch.get(),
+                                                               x_batch.get());
+        } else {
+            GKO_NOT_IMPLEMENTED;
+        }
+
+        exec->run(batch_isai::make_write_large_sys_solution_to_inverse(
+            i_size, i_row_idx, inv_A, x_batch.get()));
+    }
+}
 
 
 }  // namespace
@@ -143,8 +290,10 @@ void BatchIsai<ValueType, IndexType>::generate(
         rhs_one_idxs.get_const_data(), sizes.get_const_data(),
         this->parameters_.matrix_type_isai));
 
-    // TODO: Add kernel: extract and solve csr linear sys (will write a core
-    // function which calls make_kernels etc...)
+    batch_isai::extract_and_solve_csr_linear_sys(
+        exec, sys_csr, sizes, rhs_one_idxs, this->parameters_.matrix_type_isai,
+        count_matches_per_row_for_all_csr_sys, large_csr_linear_sys_nnz,
+        this->left_isai_.get());
 }
 
 template <typename ValueType, typename IndexType>

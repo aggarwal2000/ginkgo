@@ -73,6 +73,49 @@ constexpr int row_size_limit = 32;
         const gko::preconditioner::batch_isai_sys_mat_type& matrix_type_isai)
 
 
+#define GKO_DECLARE_BATCH_ISAI_FIND_CUMULATIVE_NNZ_CSR_MATRICES_KERNEL(      \
+    ValueType, IndexType)                                                    \
+    void find_cumulative_nnz_csr_matrices(                                   \
+        std::shared_ptr<const DefaultExecutor> exec,                         \
+        const matrix::BatchCsr<ValueType, IndexType>* inv, const int* sizes, \
+        int* count_matches_per_row_for_all_csr_sys,                          \
+        int* large_csr_linear_sys_nnz)
+
+#define GKO_DECLARE_BATCH_ISAI_SET_ROW_PTRS_AND_EXTRACT_CSR_PATTERN_KERNEL( \
+    ValueType, IndexType)                                                   \
+    void set_row_ptrs_csr_matrix_and_extract_csr_pattern(                   \
+        std::shared_ptr<const DefaultExecutor> exec, const int i_size,      \
+        const int i_row_idx,                                                \
+        const matrix::BatchCsr<ValueType, IndexType>* given_sys_csr_A,      \
+        const matrix::BatchCsr<ValueType, IndexType>* inv_A,                \
+        const int* count_matches_per_row_for_all_csr_sys,                   \
+        matrix::BatchCsr<ValueType, IndexType>* large_csr_sys,              \
+        IndexType* values_pattern_large_csr_system)
+
+
+#define GKO_DECLARE_BATCH_ISAI_CSR_FILL_VALUES_USING_PATTERN_KERNEL(ValueType, \
+                                                                    IndexType) \
+    void csr_fill_values_using_pattern(                                        \
+        std::shared_ptr<const DefaultExecutor> exec,                           \
+        const IndexType* values_pattern_large_csr_system,                      \
+        matrix::BatchCsr<ValueType, IndexType>* large_csr_sys,                 \
+        const matrix::BatchCsr<ValueType, IndexType>* given_sys_csr_A)
+
+
+#define GKO_DECLARE_BATCH_ISAI_INITIALIZE_RHS_AND_SOL_KERNEL(ValueType)     \
+    void initialize_batched_rhs_and_sol(                                    \
+        std::shared_ptr<const DefaultExecutor> exec, const int rhs_one_loc, \
+        matrix::BatchDense<ValueType>* rhs_batch,                           \
+        matrix::BatchDense<ValueType>* x_batch)
+
+#define GKO_DECLARE_BATCH_ISAI_WRITE_CSR_SOL_TO_INV_KERNEL(ValueType,       \
+                                                           IndexType)       \
+    void write_large_sys_solution_to_inverse(                               \
+        std::shared_ptr<const DefaultExecutor> exec, const int i_size,      \
+        const int i_row_idx, matrix::BatchCsr<ValueType, IndexType>* inv_A, \
+        const matrix::BatchDense<ValueType>* x_batch)
+
+
 #define GKO_DECLARE_BATCH_ISAI_APPLY_KERNEL(ValueType, IndexType)          \
     void apply_isai(std::shared_ptr<const DefaultExecutor> exec,           \
                     const matrix::BatchCsr<ValueType, IndexType>* inv_mat, \
@@ -80,14 +123,27 @@ constexpr int row_size_limit = 32;
                     matrix::BatchDense<ValueType>* z)
 
 
-#define GKO_DECLARE_ALL_AS_TEMPLATES                                   \
-    template <typename ValueType, typename IndexType>                  \
-    GKO_DECLARE_BATCH_ISAI_EXTRACT_DENSE_LINEAR_SYSTEM_PATTERN_KERNEL( \
-        ValueType, IndexType);                                         \
-    template <typename ValueType, typename IndexType>                  \
-    GKO_DECLARE_BATCH_ISAI_FILL_VALUES_DENSE_MATRIX_AND_SOLVE_KERNEL(  \
-        ValueType, IndexType);                                         \
-    template <typename ValueType, typename IndexType>                  \
+#define GKO_DECLARE_ALL_AS_TEMPLATES                                           \
+    template <typename ValueType, typename IndexType>                          \
+    GKO_DECLARE_BATCH_ISAI_EXTRACT_DENSE_LINEAR_SYSTEM_PATTERN_KERNEL(         \
+        ValueType, IndexType);                                                 \
+    template <typename ValueType, typename IndexType>                          \
+    GKO_DECLARE_BATCH_ISAI_FILL_VALUES_DENSE_MATRIX_AND_SOLVE_KERNEL(          \
+        ValueType, IndexType);                                                 \
+    template <typename ValueType, typename IndexType>                          \
+    GKO_DECLARE_BATCH_ISAI_FIND_CUMULATIVE_NNZ_CSR_MATRICES_KERNEL(ValueType,  \
+                                                                   IndexType); \
+    template <typename ValueType, typename IndexType>                          \
+    GKO_DECLARE_BATCH_ISAI_SET_ROW_PTRS_AND_EXTRACT_CSR_PATTERN_KERNEL(        \
+        ValueType, IndexType);                                                 \
+    template <typename ValueType, typename IndexType>                          \
+    GKO_DECLARE_BATCH_ISAI_CSR_FILL_VALUES_USING_PATTERN_KERNEL(ValueType,     \
+                                                                IndexType);    \
+    template <typename ValueType>                                              \
+    GKO_DECLARE_BATCH_ISAI_INITIALIZE_RHS_AND_SOL_KERNEL(ValueType);           \
+    template <typename ValueType, typename IndexType>                          \
+    GKO_DECLARE_BATCH_ISAI_WRITE_CSR_SOL_TO_INV_KERNEL(ValueType, IndexType);  \
+    template <typename ValueType, typename IndexType>                          \
     GKO_DECLARE_BATCH_ISAI_APPLY_KERNEL(ValueType, IndexType)
 
 

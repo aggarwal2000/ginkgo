@@ -83,6 +83,63 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
     GKO_DECLARE_BATCH_ISAI_FILL_VALUES_DENSE_MATRIX_AND_SOLVE_KERNEL);
 
 
+template <typename ValueType, typename IndexType>
+void find_cumulative_nnz_csr_matrices(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const matrix::BatchCsr<ValueType, IndexType>* const inv,
+    const int* const sizes, int* const count_matches_per_row_for_all_csr_sys,
+    int* const large_csr_linear_sys_nnz) GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ISAI_FIND_CUMULATIVE_NNZ_CSR_MATRICES_KERNEL);
+
+
+template <typename ValueType, typename IndexType>
+void set_row_ptrs_csr_matrix_and_extract_csr_pattern(
+    std::shared_ptr<const DefaultExecutor> exec, const int i_size,
+    const int i_row_idx,
+    const matrix::BatchCsr<ValueType, IndexType>* const given_sys_csr_A,
+    const matrix::BatchCsr<ValueType, IndexType>* const inv_A,
+    const int* const count_matches_per_row_for_all_csr_sys,
+    matrix::BatchCsr<ValueType, IndexType>* const large_csr_linear_sys,
+    IndexType* const values_pattern_large_csr_system) GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ISAI_SET_ROW_PTRS_AND_EXTRACT_CSR_PATTERN_KERNEL);
+
+
+template <typename ValueType, typename IndexType>
+void csr_fill_values_using_pattern(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const IndexType* const values_pattern_large_csr_system,
+    matrix::BatchCsr<ValueType, IndexType>* const large_csr_sys,
+    const matrix::BatchCsr<ValueType, IndexType>* const given_sys_csr_A)
+    GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ISAI_CSR_FILL_VALUES_USING_PATTERN_KERNEL);
+
+
+template <typename ValueType>
+void initialize_batched_rhs_and_sol(
+    std::shared_ptr<const DefaultExecutor> exec, const int rhs_one_loc,
+    matrix::BatchDense<ValueType>* const rhs_batch,
+    matrix::BatchDense<ValueType>* const x_batch) GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(
+    GKO_DECLARE_BATCH_ISAI_INITIALIZE_RHS_AND_SOL_KERNEL);
+
+
+template <typename ValueType, typename IndexType>
+void write_large_sys_solution_to_inverse(
+    std::shared_ptr<const DefaultExecutor> exec, const int i_size,
+    const int i_row_idx, matrix::BatchCsr<ValueType, IndexType>* const inv_A,
+    const matrix::BatchDense<ValueType>* const x_batch) GKO_NOT_IMPLEMENTED;
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ISAI_WRITE_CSR_SOL_TO_INV_KERNEL);
+
+
 // only used for testing purpose
 template <typename ValueType, typename IndexType>
 void apply_isai(std::shared_ptr<const DefaultExecutor> exec,

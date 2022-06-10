@@ -70,6 +70,9 @@ void create_dependency_graph(
     const auto l_nnz = l_factor->get_num_stored_elements() / nbatch;
     const auto u_nnz = u_factor->get_num_stored_elements() / nbatch;
 
+    // TODO: Avoid extra copy by using views if exec is Refernce/Omp executor
+    // (i.e. use a copy only when exec's allocation space is different than that
+    // of exec->master())
     Array<IndexType> A_row_ptrs(exec->get_master(), nrows + 1);
     exec->get_master()->copy_from(exec.get(), nrows + 1,
                                   sys_mat->get_const_row_ptrs(),
