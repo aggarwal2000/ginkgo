@@ -283,7 +283,6 @@ public:
                 device::batch_isai<device_value_type>(left_approx_inv), b_b,
                 x_b);
 
-            GKO_NOT_IMPLEMENTED;
         } else {
             GKO_NOT_IMPLEMENTED;
         }
