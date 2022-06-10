@@ -31,6 +31,44 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
 
+// TODO: Remove this
+template <typename ValueType>
+__device__ __forceinline__ void single_matvec_kernel_batch_ilu_isai(
+    const gko::batch_csr::BatchEntry<const ValueType>& a,
+    const ValueType* const __restrict__ b, ValueType* const __restrict__ c)
+{
+    constexpr auto tile_size = config::warp_size;
+
+    auto thread_block = group::this_thread_block();
+    auto subwarp_grp = group::tiled_partition<tile_size>(thread_block);
+    const auto subwarp_grp_id = static_cast<int>(threadIdx.x / tile_size);
+    const int num_subwarp_grps_per_block = ceildiv(blockDim.x, tile_size);
+
+    for (int row = subwarp_grp_id; row < a.num_rows;
+         row += num_subwarp_grps_per_block) {
+        const int row_start = a.row_ptrs[row];
+        const int row_end = a.row_ptrs[row + 1];
+
+        ValueType temp = zero<ValueType>();
+        for (int i = subwarp_grp.thread_rank() + row_start; i < row_end;
+             i += subwarp_grp.size()) {
+            const int col = a.col_idxs[i];
+            const ValueType val = a.values[i];
+            temp += val * b[col];
+        }
+
+#pragma unroll
+        for (int i = static_cast<int>(tile_size) / 2; i > 0; i /= 2) {
+            temp += subwarp_grp.shfl_down(temp, i);
+        }
+
+        if (subwarp_grp.thread_rank() == 0) {
+            c[row] = temp;
+        }
+    }
+}
+
+
 /**
  * Batch ilu-isai preconditioner class.
  *
@@ -126,7 +164,7 @@ public:
         // => U_left_inv * L_left_inv * L * U * vec_hat = U_left_inv *
         // L_left_inv * vec
         // => vec_hat =  U_left_inv * L_left_inv * vec
-        printf("\n batch isai ilu precond apply- yet to be implemneted");
+
         // TODO: Include appropriate header
         /*
         if (is_inv_factors_spgemm_ == true) {
@@ -136,6 +174,13 @@ public:
             __syncthreads();
             single_matvec_kernel(u_left_inv_entry_, work_, z);
         }*/
+        if (is_inv_factors_spgemm_ == true) {
+            single_matvec_kernel_batch_ilu_isai(mult_inv_entry_, r, z);
+        } else {
+            single_matvec_kernel_batch_ilu_isai(l_left_inv_entry_, r, work_);
+            __syncthreads();
+            single_matvec_kernel_batch_ilu_isai(u_left_inv_entry_, work_, z);
+        }
     }
 
 
