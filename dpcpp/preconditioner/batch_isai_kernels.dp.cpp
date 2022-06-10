@@ -48,7 +48,7 @@ namespace batch_isai {
 template <typename ValueType, typename IndexType>
 void extract_dense_linear_sys_pattern(
     std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const sys_csr,
+    const matrix::Csr<ValueType, IndexType>* const first_sys_csr,
     matrix::BatchCsr<ValueType, IndexType>* const inv,
     IndexType* const dense_mat_pattern, int* const rhs_one_idxs,
     int* const sizes,

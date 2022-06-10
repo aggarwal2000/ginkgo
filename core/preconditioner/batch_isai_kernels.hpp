@@ -56,7 +56,7 @@ constexpr int row_size_limit = 32;
     ValueType, IndexType)                                                  \
     void extract_dense_linear_sys_pattern(                                 \
         std::shared_ptr<const DefaultExecutor> exec,                       \
-        const matrix::BatchCsr<ValueType, IndexType>* sys_csr,             \
+        const matrix::Csr<ValueType, IndexType>* first_sys_csr,            \
         matrix::BatchCsr<ValueType, IndexType>* inv,                       \
         IndexType* dense_mat_pattern, int* rhs_one_idxs, int* sizes,       \
         int* count_matches_per_row_for_all_csr_sys)

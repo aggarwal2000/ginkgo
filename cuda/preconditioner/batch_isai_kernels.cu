@@ -52,7 +52,7 @@ namespace {
 
 
 constexpr size_type default_block_size = 256;
-
+constexpr int subwarp_size = 32;
 
 // #include "common/cuda_hip/preconditioner/batch_isai_kernels.hpp.inc"
 
@@ -62,11 +62,15 @@ constexpr size_type default_block_size = 256;
 template <typename ValueType, typename IndexType>
 void extract_dense_linear_sys_pattern(
     std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const sys_csr,
+    const matrix::Csr<ValueType, IndexType>* const first_sys_csr,
     matrix::BatchCsr<ValueType, IndexType>* const inv,
     IndexType* const dense_mat_pattern, int* const rhs_one_idxs,
-    int* const sizes,
-    int* const count_matches_per_row_for_all_csr_sys) GKO_NOT_IMPLEMENTED;
+    int* const sizes, int* const count_matches_per_row_for_all_csr_sys)
+{
+    const auto nrows = first_sys_csr->get_size()[0];
+
+    // initialize_pattern_kernel(dense_mat_pattern, rhs_one_idxs, nrows);
+}
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
     GKO_DECLARE_BATCH_ISAI_EXTRACT_DENSE_LINEAR_SYSTEM_PATTERN_KERNEL);

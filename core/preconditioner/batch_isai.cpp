@@ -132,7 +132,7 @@ void BatchIsai<ValueType, IndexType>::generate(
         exec, this->left_isai_->get_num_stored_elements() / nbatch);
 
     exec->run(batch_isai::make_extract_dense_linear_sys_pattern(
-        sys_csr, this->left_isai_.get(), dense_mat_pattern.get_data(),
+        first_csr.get(), this->left_isai_.get(), dense_mat_pattern.get_data(),
         rhs_one_idxs.get_data(), sizes.get_data(),
         count_matches_per_row_for_all_csr_sys.get_data()));
 
