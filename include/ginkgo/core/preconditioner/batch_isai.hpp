@@ -51,7 +51,7 @@ namespace preconditioner {
  * Type of the matrix for which sparse approx. inverse is to be generated.
  *
  */
-enum class batch_isai_sys_mat_type { lower, upper, general };
+enum class batch_isai_sys_mat_type { lower_tri, upper_tri, general };
 
 /**
  * A batch of approximate inverse preconditioners for a batch of matrices.

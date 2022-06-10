@@ -125,7 +125,9 @@ void BatchIsai<ValueType, IndexType>::generate(
     gko::Array<IndexType> dense_mat_pattern(
         exec, gko::kernels::batch_isai::row_size_limit *
                   gko::kernels::batch_isai::row_size_limit * nrows);
+    dense_mat_pattern.fill(-1);
     gko::Array<int> rhs_one_idxs(exec, nrows);
+    rhs_one_idxs.fill(-1);
     gko::Array<int> sizes(exec, nrows);
     gko::Array<int> large_csr_linear_sys_nnz(exec, nrows);
     gko::Array<int> count_matches_per_row_for_all_csr_sys(

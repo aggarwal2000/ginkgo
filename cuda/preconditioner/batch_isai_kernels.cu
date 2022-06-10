@@ -52,9 +52,9 @@ namespace {
 
 
 constexpr size_type default_block_size = 256;
-constexpr int subwarp_size = 32;
+constexpr int default_subwarpgrp_size = 32;
 
-// #include "common/cuda_hip/preconditioner/batch_isai_kernels.hpp.inc"
+#include "common/cuda_hip/preconditioner/batch_isai_kernels.hpp.inc"
 
 }  // namespace
 
@@ -68,8 +68,22 @@ void extract_dense_linear_sys_pattern(
     int* const sizes, int* const count_matches_per_row_for_all_csr_sys)
 {
     const auto nrows = first_sys_csr->get_size()[0];
+    const auto nnz_inv =
+        inv->get_num_stored_elements() / inv->get_num_batch_entries();
+    const auto nnz_given_mat = first_sys_csr->get_num_stored_elements();
+    const size_type num_blocks =
+        ceildiv(default_subwarpgrp_size * nnz_inv, default_block_size);
 
-    // initialize_pattern_kernel(dense_mat_pattern, rhs_one_idxs, nrows);
+    extract_dense_sys_pattern_kernel<default_subwarpgrp_size>
+        <<<num_blocks, default_block_size>>>(
+            static_cast<int>(nrows), first_sys_csr->get_const_row_ptrs(),
+            first_sys_csr->get_const_col_idxs(),
+            static_cast<int>(nnz_given_mat), inv->get_const_row_ptrs(),
+            inv->get_const_col_idxs(), static_cast<int>(nnz_inv),
+            dense_mat_pattern, rhs_one_idxs, sizes,
+            count_matches_per_row_for_all_csr_sys);
+
+    GKO_CUDA_LAST_IF_ERROR_THROW;
 }
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
@@ -83,8 +97,47 @@ void fill_values_dense_mat_and_solve(
     matrix::BatchCsr<ValueType, IndexType>* const inv,
     const IndexType* const dense_mat_pattern, const int* const rhs_one_idxs,
     const int* const sizes,
-    const gko::preconditioner::batch_isai_sys_mat_type& matrix_type_isai)
-    GKO_NOT_IMPLEMENTED;
+    const gko::preconditioner::batch_isai_sys_mat_type&
+        given_system_matrix_type)
+{
+    const auto nrows = sys_csr->get_size().at(0)[0];
+    const auto nbatch = sys_csr->get_num_batch_entries();
+    const auto nnz_inv = inv->get_num_stored_elements() / nbatch;
+    const auto nnz_given_mat = sys_csr->get_num_stored_elements() / nbatch;
+
+    int matrix_type;
+
+    if (given_system_matrix_type ==
+        gko::preconditioner::batch_isai_sys_mat_type::lower_tri) {
+        //  std::cout << "\n small uppertrsv \n" << std::endl;
+        matrix_type = 0;
+    } else if (given_system_matrix_type ==
+               gko::preconditioner::batch_isai_sys_mat_type::upper_tri) {
+        // std::cout << "\n small lower trsv \n" << std::endl;
+        matrix_type = 1;
+    } else if (given_system_matrix_type ==
+               gko::preconditioner::batch_isai_sys_mat_type::general) {
+        //  std::cout << "\n small general isai \n" << std::endl;
+        matrix_type = 2;
+    } else {
+        GKO_NOT_IMPLEMENTED;
+    }
+
+    const size_type num_blocks =
+        ceildiv(default_subwarpgrp_size * nrows * nbatch, default_block_size);
+
+    fill_values_dense_mat_and_solve_kernel<default_subwarpgrp_size>
+        <<<num_blocks, default_block_size>>>(
+            nbatch, static_cast<int>(nrows), inv->get_const_row_ptrs(),
+            inv->get_const_col_idxs(), as_cuda_type(inv->get_values()),
+            static_cast<int>(nnz_inv), sys_csr->get_const_row_ptrs(),
+            sys_csr->get_const_col_idxs(),
+            as_cuda_type(sys_csr->get_const_values()),
+            static_cast<int>(nnz_given_mat), dense_mat_pattern, rhs_one_idxs,
+            sizes, matrix_type);
+
+    GKO_CUDA_LAST_IF_ERROR_THROW;
+}
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
     GKO_DECLARE_BATCH_ISAI_FILL_VALUES_DENSE_MATRIX_AND_SOLVE_KERNEL);

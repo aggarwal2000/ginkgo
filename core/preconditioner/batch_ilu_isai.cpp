@@ -105,7 +105,7 @@ void BatchIluIsai<ValueType, IndexType>::generate(
     auto lower_isai_precond =
         gko::preconditioner::BatchIsai<ValueType, IndexType>::build()
             .with_sparsity_power(parameters_.lower_factor_isai_sparsity_power)
-            .with_matrix_type_isai(batch_isai_sys_mat_type::lower)
+            .with_matrix_type_isai(batch_isai_sys_mat_type::lower_tri)
             .with_skip_sorting(true)
             .on(exec)
             ->generate(l_factor);
@@ -113,7 +113,7 @@ void BatchIluIsai<ValueType, IndexType>::generate(
     auto upper_isai_precond =
         gko::preconditioner::BatchIsai<ValueType, IndexType>::build()
             .with_sparsity_power(parameters_.upper_factor_isai_sparsity_power)
-            .with_matrix_type_isai(batch_isai_sys_mat_type::upper)
+            .with_matrix_type_isai(batch_isai_sys_mat_type::upper_tri)
             .with_skip_sorting(true)
             .on(exec)
             ->generate(u_factor);
