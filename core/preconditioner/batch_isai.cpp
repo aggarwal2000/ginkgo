@@ -180,8 +180,8 @@ void extract_and_solve_csr_linear_sys(
         // create and initialize batched rhs and sol x
         std::shared_ptr<batch_dense> rhs_batch = gko::share(
             batch_dense::create(exec, batch_dim<2>(nbatch, dim<2>(i_size, 1))));
-        assert(rhs_one_idxs_host->get_const_data()[i_row_idx] >= 0);
-        assert(i_size > rhs_one_idxs_host->get_const_data()[i_row_idx]);
+        assert(rhs_one_idxs_host.get_const_data()[i_row_idx] >= 0);
+        assert(i_size > rhs_one_idxs_host.get_const_data()[i_row_idx]);
         std::shared_ptr<batch_dense> x_batch = gko::share(
             batch_dense::create(exec, batch_dim<2>(nbatch, dim<2>(i_size, 1))));
         exec->run(batch_isai::make_initialize_batched_rhs_and_sol(
