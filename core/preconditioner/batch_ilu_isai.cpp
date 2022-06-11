@@ -69,14 +69,16 @@ void BatchIluIsai<ValueType, IndexType>::generate(
         sys_csr = a_matrix.get();
     }
 
+    // When this smart pointer is assigned to another shared ptr, is the deletor
+    // also copied??
     std::shared_ptr<const matrix_type> sys_csr_smart(
         sys_csr, [](const matrix_type* plain_ptr) {});
 
     std::shared_ptr<const batch_csr> l_factor;
     std::shared_ptr<const batch_csr> u_factor;
 
-    if (parameters_.ilu_factorization_type =
-            batch_ilu_factorization_type::par_ilu) {
+    if (parameters_.ilu_factorization_type ==
+        batch_ilu_factorization_type::par_ilu) {
         auto parilu_precond =
             gko::preconditioner::BatchParIlu<ValueType, IndexType>::build()
                 .with_skip_sorting(parameters_.skip_sorting)
@@ -144,6 +146,10 @@ std::unique_ptr<BatchLinOp> BatchIluIsai<ValueType, IndexType>::conj_transpose()
     GKO_NOT_IMPLEMENTED;
 }
 
+
+#define GKO_DECLARE_BATCH_ILU_ISAI(ValueType) \
+    class BatchIluIsai<ValueType, int32>
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_BATCH_ILU_ISAI);
 
 }  // namespace preconditioner
 }  // namespace gko

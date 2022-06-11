@@ -96,7 +96,7 @@ public:
          * is used)
          *
          */
-        int GKO_FACTORY_PARAMETER_SCALAR(par_ilu_num_sweeps, 3);
+        int GKO_FACTORY_PARAMETER_SCALAR(par_ilu_num_sweeps, 10);
 
 
         /**

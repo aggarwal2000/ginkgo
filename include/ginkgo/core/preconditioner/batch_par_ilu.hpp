@@ -87,7 +87,7 @@ public:
          * Number of sweeps for parIlu0
          *
          */
-        int GKO_FACTORY_PARAMETER_SCALAR(num_sweeps, 3);
+        int GKO_FACTORY_PARAMETER_SCALAR(num_sweeps, 10);
     };
     GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchParIlu, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
