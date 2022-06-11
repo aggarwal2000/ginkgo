@@ -74,9 +74,6 @@ void BatchIluIsai<ValueType, IndexType>::generate(
     std::shared_ptr<const matrix_type> sys_csr_smart(
         sys_csr, [](const matrix_type* plain_ptr) {});
 
-    std::shared_ptr<const batch_csr> l_factor;
-    std::shared_ptr<const batch_csr> u_factor;
-
     if (parameters_.ilu_factorization_type ==
         batch_ilu_factorization_type::par_ilu) {
         auto parilu_precond =
@@ -85,8 +82,8 @@ void BatchIluIsai<ValueType, IndexType>::generate(
                 .with_num_sweeps(parameters_.par_ilu_num_sweeps)
                 .on(exec)
                 ->generate(sys_csr_smart);
-        l_factor = parilu_precond->get_const_lower_factor();
-        u_factor = parilu_precond->get_const_upper_factor();
+        this->l_factor_ = parilu_precond->get_const_lower_factor();
+        this->u_factor_ = parilu_precond->get_const_upper_factor();
     } else {
         auto exact_ilu_precond =
             gko::preconditioner::BatchExactIlu<ValueType, IndexType>::build()
@@ -99,8 +96,8 @@ void BatchIluIsai<ValueType, IndexType>::generate(
             l_u_pair = exact_ilu_precond
                            ->generate_split_factors_from_factored_matrix();
 
-        l_factor = l_u_pair.first;
-        u_factor = l_u_pair.second;
+        this->l_factor_ = l_u_pair.first;
+        this->u_factor_ = l_u_pair.second;
     }
 
 
@@ -110,7 +107,7 @@ void BatchIluIsai<ValueType, IndexType>::generate(
             .with_matrix_type_isai(batch_isai_sys_mat_type::lower_tri)
             .with_skip_sorting(true)
             .on(exec)
-            ->generate(l_factor);
+            ->generate(l_factor_);
 
     auto upper_isai_precond =
         gko::preconditioner::BatchIsai<ValueType, IndexType>::build()
@@ -118,7 +115,7 @@ void BatchIluIsai<ValueType, IndexType>::generate(
             .with_matrix_type_isai(batch_isai_sys_mat_type::upper_tri)
             .with_skip_sorting(true)
             .on(exec)
-            ->generate(u_factor);
+            ->generate(u_factor_);
 
     l_left_isai_ = lower_isai_precond->get_const_left_approximate_inverse();
     u_left_isai_ = upper_isai_precond->get_const_left_approximate_inverse();

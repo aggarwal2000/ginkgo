@@ -140,6 +140,18 @@ public:
         return u_left_isai_;
     }
 
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+    get_const_lower_factor() const
+    {
+        return l_factor_;
+    }
+
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+    get_const_upper_factor() const
+    {
+        return u_factor_;
+    }
+
     // u_left_isai_ * l_left_isai_
     std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
     get_const_u_left_isai_mult_l_left_isai() const
@@ -198,6 +210,9 @@ private:
     std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>> l_left_isai_;
     std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>> u_left_isai_;
     std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> mult_inv_;
+    // Note: Make these two const to avoid cloning the parilu precond's factors
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>> l_factor_;
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>> u_factor_;
 };
 
 
