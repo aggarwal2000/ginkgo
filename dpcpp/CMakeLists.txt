@@ -24,9 +24,9 @@ target_sources(ginkgo_dpcpp
     distributed/partition_kernels.dp.cpp
     factorization/cholesky_kernels.dp.cpp
     factorization/factorization_kernels.dp.cpp
+    factorization/factorization_kernels.dp.cpp
     factorization/ic_kernels.dp.cpp
     factorization/ilu_kernels.dp.cpp
-    factorization/factorization_kernels.dp.cpp
     factorization/lu_kernels.dp.cpp
     factorization/par_ic_kernels.dp.cpp
     factorization/par_ict_kernels.dp.cpp
@@ -52,8 +52,9 @@ target_sources(ginkgo_dpcpp
     matrix/sellp_kernels.dp.cpp
     matrix/sparsity_csr_kernels.dp.cpp
     multigrid/amgx_pgm_kernels.dp.cpp
-    preconditioner/batch_ilu_kernels.dp.cpp
     preconditioner/batch_identity_kernels.dp.cpp
+    preconditioner/batch_ilu_kernels.dp.cpp
+    preconditioner/batch_isai_kernels.dp.cpp
     preconditioner/batch_jacobi_kernels.dp.cpp
     preconditioner/batch_jacobi_kernels.dp.cpp
     preconditioner/isai_kernels.dp.cpp
