@@ -125,10 +125,10 @@ public:
                 as<BatchTransposable>(this->system_matrix_)->conj_transpose()));
     }
 
-    const matrix::BatchCsr<ValueType, IndexType>* get_const_factorized_matrix()
-        const
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+    get_const_factorized_matrix() const
     {
-        return mat_factored_.get();
+        return mat_factored_;
     }
 
     const IndexType* get_const_diag_locations() const

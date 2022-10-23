@@ -30,13 +30,13 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#ifndef GKO_PUBLIC_CORE_PRECONDITIONER_BATCH_ISAI_HPP_
-#define GKO_PUBLIC_CORE_PRECONDITIONER_BATCH_ISAI_HPP_
+#ifndef GKO_PUBLIC_CORE_PRECONDITIONER_BATCH_ILU_ISAI_HPP_
+#define GKO_PUBLIC_CORE_PRECONDITIONER_BATCH_ILU_ISAI_HPP_
 
 
 #include <ginkgo/core/base/array.hpp>
 #include <ginkgo/core/matrix/batch_csr.hpp>
-
+#include <ginkgo/core/preconditioner/batch_ilu.hpp>
 
 namespace gko {
 /**
@@ -47,27 +47,32 @@ namespace gko {
 namespace preconditioner {
 
 
-enum class batch_isai_input_matrix_type { lower_tri, upper_tri, general };
+enum class batch_ilu_isai_apply {
+    simple_spmvs,
+    inv_factors_spgemm,
+    relaxation_steps
+};
+
 
 /**
- * A batch of (left) incomplete sparse approximate inverse preconditioners for a
- * batch of matrices.
+ * A batch of ILU-ISAI preconditioners for a batch of matrices.
  *
  * @tparam ValueType  precision of matrix elements
  *
- * @ingroup isai
+ * @ingroup ilu
  * @ingroup precond
  * @ingroup BatchLinOp
  */
 template <typename ValueType = default_precision, typename IndexType = int32>
-class BatchIsai : public EnableBatchLinOp<BatchIsai<ValueType, IndexType>>,
-                  public BatchTransposable {
-    friend class EnableBatchLinOp<BatchIsai>;
-    friend class EnablePolymorphicObject<BatchIsai, BatchLinOp>;
+class BatchIluIsai
+    : public EnableBatchLinOp<BatchIluIsai<ValueType, IndexType>>,
+      public BatchTransposable {
+    friend class EnableBatchLinOp<BatchIluIsai>;
+    friend class EnablePolymorphicObject<BatchIluIsai, BatchLinOp>;
 
 public:
-    using EnableBatchLinOp<BatchIsai>::convert_to;
-    using EnableBatchLinOp<BatchIsai>::move_to;
+    using EnableBatchLinOp<BatchIluIsai>::convert_to;
+    using EnableBatchLinOp<BatchIluIsai>::move_to;
     using value_type = ValueType;
     using index_type = IndexType;
     using matrix_type = matrix::BatchCsr<ValueType, IndexType>;
@@ -78,34 +83,49 @@ public:
          * @brief Optimization parameter that skips the sorting of the input
          *        matrix (only skip if it is known that it is already sorted).
          *
-         * The algorithm to generate isai requires the
+         * The algorithm to generate ilu0 and isai requires the
          * input matrix to be sorted. If it is, this parameter can be set to
          * `true` to skip the sorting for better performance.
          */
         bool GKO_FACTORY_PARAMETER_SCALAR(skip_sorting, false);
 
         /**
-         * @brief Sparisty pattern power for batch isai generation.
+         * @brief Number of sweeps for parilu0
+         *
+         * This parameter is used only in case of parilu0 preconditioner.
+         */
+        int GKO_FACTORY_PARAMETER_SCALAR(parilu_num_sweeps, 10);
+
+        /**
+         * @brief batch_ilu_isai_type
+         *
+         */
+        batch_ilu_type GKO_FACTORY_PARAMETER_SCALAR(ilu_type,
+                                                    batch_ilu_type::exact_ilu);
+
+        /**
+         * @brief Sparisty pattern power for batch isai generation of lower
+         * triangular factors.
          *
          * Since spy(A_i ^ k) for k > 1 may not be the same for all matrices in
          * the batch, the batched isai generation algorithm uses the sparisty
          * pattern resulting from the first matrix in the batch to generate
          * inverses for all the batch members.
          */
-        int GKO_FACTORY_PARAMETER_SCALAR(sparsity_power, 1);
+        int GKO_FACTORY_PARAMETER_SCALAR(lower_factor_isai_sparsity_power, 1);
+
 
         /**
-         * @brief batch_isai_input_matrix_type
-         *
-         * This parameter indicates whether the input matrix for which ISAI is
-         * to be generated is -lower triangular or upper triangular or a general
-         * square matrix
-         *
+         * @brief Sparisty pattern power for isai generation of upper triangular
+         * factors.
          */
-        batch_isai_input_matrix_type GKO_FACTORY_PARAMETER_SCALAR(
-            isai_input_matrix_type, batch_isai_input_matrix_type::general);
+        int GKO_FACTORY_PARAMETER_SCALAR(upper_factor_isai_sparsity_power, 1);
+
+
+        batch_ilu_isai_apply GKO_FACTORY_PARAMETER_SCALAR(
+            apply_type, batch_ilu_isai_apply::simple_spmvs);
     };
-    GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchIsai, parameters, Factory);
+    GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchIluIsai, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
 
 
@@ -113,8 +133,13 @@ public:
     {
         return build()
             .with_skip_sorting(this->parameters_.skip_sorting)
-            .with_isai_input_matrix_type(this->get_transpose_matrix_type())
-            .with_sparsity_power(this->parameters_.sparsity_power)
+            .with_ilu_type(this->parameters_.ilu_type)
+            .with_parilu_num_sweeps(this->parameters_.parilu_num_sweeps)
+            .with_lower_factor_isai_sparsity_power(
+                this->parameters_.lower_factor_isai_sparsity_power)
+            .with_upper_factor_isai_sparsity_power(
+                this->parameters_.upper_factor_isai_sparsity_power)
+            .with_apply_type(this->parameters_.apply_type)
             .on(this->get_executor())
             ->generate(share(
                 as<BatchTransposable>(this->system_matrix_)->transpose()));
@@ -124,39 +149,50 @@ public:
     {
         return build()
             .with_skip_sorting(this->parameters_.skip_sorting)
-            .with_isai_input_matrix_type(this->get_transpose_matrix_type())
-            .with_sparsity_power(this->parameters_.sparsity_power)
+            .with_ilu_type(this->parameters_.ilu_type)
+            .with_parilu_num_sweeps(this->parameters_.parilu_num_sweeps)
+            .with_lower_factor_isai_sparsity_power(
+                this->parameters_.lower_factor_isai_sparsity_power)
+            .with_upper_factor_isai_sparsity_power(
+                this->parameters_.upper_factor_isai_sparsity_power)
+            .with_apply_type(this->parameters_.apply_type)
             .on(this->get_executor())
             ->generate(share(
                 as<BatchTransposable>(this->system_matrix_)->conj_transpose()));
     }
 
-    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
-    get_const_approximate_inverse() const
+    const matrix::BatchCsr<ValueType, IndexType>* get_const_lower_factor_isai()
+        const
     {
-        return approx_inv_;
+        return lower_factor_isai_.get();
+    }
+
+    const matrix::BatchCsr<ValueType, IndexType>* get_const_upper_factor_isai()
+        const
+    {
+        return upper_factor_isai_.get();
     }
 
 protected:
     /**
-     * Creates an empty Isai preconditioner.
+     * Creates an empty IluIsai preconditioner.
      *
      * @param exec  the executor this object is assigned to
      */
-    explicit BatchIsai(std::shared_ptr<const Executor> exec)
-        : EnableBatchLinOp<BatchIsai>(exec)
+    explicit BatchIluIsai(std::shared_ptr<const Executor> exec)
+        : EnableBatchLinOp<BatchIluIsai>(exec)
     {}
 
     /**
-     * Creates a Isai preconditioner from a matrix using a Isai::Factory.
+     * Creates a IluIsai preconditioner from a matrix using a IluIsai::Factory.
      *
      * @param factory  the factory to use to create the preconditoner
      * @param system_matrix  the matrix this preconditioner should be created
      *                       from
      */
-    explicit BatchIsai(const Factory* factory,
-                       std::shared_ptr<const BatchLinOp> system_matrix)
-        : EnableBatchLinOp<BatchIsai>(
+    explicit BatchIluIsai(const Factory* factory,
+                          std::shared_ptr<const BatchLinOp> system_matrix)
+        : EnableBatchLinOp<BatchIluIsai>(
               factory->get_executor(),
               gko::transpose(system_matrix->get_size())),
           parameters_{factory->get_parameters()},
@@ -192,21 +228,13 @@ protected:
 
 
 private:
-    batch_isai_input_matrix_type get_transpose_matrix_type() const
-    {
-        batch_isai_input_matrix_type mat_type =
-            this->parameters_.isai_input_matrix_type;
-        batch_isai_input_matrix_type trans_mat_type = mat_type;
-        if (mat_type == batch_isai_input_matrix_type::lower_tri) {
-            trans_mat_type = batch_isai_input_matrix_type::upper_tri;
-        } else if (mat_type == batch_isai_input_matrix_type::upper_tri) {
-            trans_mat_type = batch_isai_input_matrix_type::lower_tri;
-        }
-        return trans_mat_type;
-    }
-
     std::shared_ptr<const BatchLinOp> system_matrix_;
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> approx_inv_;
+    // Note: Make these two const to avoid cloning the isai precond's approx inv
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+        lower_factor_isai_;
+    std::shared_ptr<const matrix::BatchCsr<ValueType, IndexType>>
+        upper_factor_isai_;
+    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> mult_inv_;
 };
 
 
@@ -214,4 +242,4 @@ private:
 }  // namespace gko
 
 
-#endif  // GKO_PUBLIC_CORE_PRECONDITIONER_BATCH_ISAI_HPP_
+#endif  // GKO_PUBLIC_CORE_PRECONDITIONER_BATCH_ILU_ISAI_HPP_
