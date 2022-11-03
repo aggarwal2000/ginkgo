@@ -30,56 +30,41 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#include "core/preconditioner/batch_ilu_kernels.hpp"
-
-
-#include <ginkgo/core/matrix/batch_csr.hpp>
-
-
-#include "core/matrix/batch_struct.hpp"
-
-
-namespace gko {
-namespace kernels {
-namespace dpcpp {
-namespace batch_ilu {
-
+template <typename ValueType, typename IndexType>
+__device__ __forceinline__
+    std::enable_if_t<std::is_floating_point<ValueType>::value, ValueType>
+    load(const ValueType* values, IndexType index)
+{
+    const volatile ValueType* val = values + index;
+    return *val;
+}
 
 template <typename ValueType, typename IndexType>
-void compute_ilu0_factorization(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const IndexType* const diag_locs,
-    matrix::BatchCsr<ValueType, IndexType>* const mat_fact) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_EXACT_ILU_COMPUTE_FACTORIZATION_KERNEL);
-
-
-template <typename ValueType, typename IndexType>
-void compute_parilu0_factorization(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const sys_mat,
-    matrix::BatchCsr<ValueType, IndexType>* const mat_fact,
-    const int parilu_num_sweeps, const IndexType* const dependencies,
-    const IndexType* const nz_ptrs) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PARILU_COMPUTE_FACTORIZATION_KERNEL);
-
+__device__ __forceinline__ std::enable_if_t<
+    std::is_floating_point<ValueType>::value, thrust::complex<ValueType>>
+load(const thrust::complex<ValueType>* values, IndexType index)
+{
+    auto real = reinterpret_cast<const ValueType*>(values);
+    auto imag = real + 1;
+    return {load(real, 2 * index), load(imag, 2 * index)};
+}
 
 template <typename ValueType, typename IndexType>
-void apply_ilu(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const factored_matrix,
-    const IndexType* const diag_locs,
-    const matrix::BatchDense<ValueType>* const r,
-    matrix::BatchDense<ValueType>* const z) GKO_NOT_IMPLEMENTED;
+__device__ __forceinline__ void store(
+    ValueType* values, IndexType index,
+    std::enable_if_t<std::is_floating_point<ValueType>::value, ValueType> value)
+{
+    volatile ValueType* val = values + index;
+    *val = value;
+}
 
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_ILU_APPLY_KERNEL);
-
-}  // namespace batch_ilu
-}  // namespace dpcpp
-}  // namespace kernels
-}  // namespace gko
+template <typename ValueType, typename IndexType>
+__device__ __forceinline__ void store(thrust::complex<ValueType>* values,
+                                      IndexType index,
+                                      thrust::complex<ValueType> value)
+{
+    auto real = reinterpret_cast<ValueType*>(values);
+    auto imag = real + 1;
+    store(real, 2 * index, value.real());
+    store(imag, 2 * index, value.imag());
+}

@@ -37,7 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "core/matrix/batch_struct.hpp"
+#include "cuda/base/exception.cuh"
 #include "cuda/components/cooperative_groups.cuh"
+#include "cuda/components/load_store.cuh"
+#include "cuda/components/thread_ids.cuh"
 #include "cuda/matrix/batch_struct.hpp"
 
 
@@ -50,62 +53,93 @@ namespace {
 
 constexpr size_type default_block_size = 256;
 
-
+#include "common/cuda_hip/matrix/batch_vector_kernels.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_ilu.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_ilu_kernels.hpp.inc"
-#include "common/cuda_hip/preconditioner/batch_trsv.hpp.inc"
-
 
 }  // namespace
 
 
 template <typename ValueType, typename IndexType>
-void generate_split(std::shared_ptr<const DefaultExecutor> exec,
-                    gko::preconditioner::batch_factorization_type,
-                    const matrix::BatchCsr<ValueType, IndexType>* const a,
-                    matrix::BatchCsr<ValueType, IndexType>* const l,
-                    matrix::BatchCsr<ValueType, IndexType>* const u)
+void compute_ilu0_factorization(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const IndexType* const diag_locs,
+    matrix::BatchCsr<ValueType, IndexType>* const mat_fact)
 {
-    const auto num_rows = static_cast<int>(a->get_size().at(0)[0]);
-    const auto nbatch = a->get_num_batch_entries();
-    const auto nnz = static_cast<int>(a->get_num_stored_elements() / nbatch);
-    const auto l_nnz = static_cast<int>(l->get_num_stored_elements() / nbatch);
-    const auto u_nnz = static_cast<int>(u->get_num_stored_elements() / nbatch);
-    generate<<<nbatch, default_block_size>>>(
-        nbatch, num_rows, nnz, a->get_const_row_ptrs(), a->get_const_col_idxs(),
-        as_cuda_type(a->get_const_values()), l_nnz, l->get_const_row_ptrs(),
-        l->get_const_col_idxs(), as_cuda_type(l->get_values()), u_nnz,
-        u->get_const_row_ptrs(), u->get_const_col_idxs(),
-        as_cuda_type(u->get_values()));
+    const auto num_rows = static_cast<int>(mat_fact->get_size().at(0)[0]);
+    const auto nbatch = mat_fact->get_num_batch_entries();
+    const auto nnz =
+        static_cast<int>(mat_fact->get_num_stored_elements() / nbatch);
+
+    const int dynamic_shared_mem_bytes = 2 * num_rows * sizeof(ValueType);
+
+    generate_exact_ilu0_kernel<<<nbatch, default_block_size,
+                                 dynamic_shared_mem_bytes>>>(
+        nbatch, num_rows, nnz, diag_locs, mat_fact->get_const_row_ptrs(),
+        mat_fact->get_const_col_idxs(), as_cuda_type(mat_fact->get_values()));
+
+    GKO_CUDA_LAST_IF_ERROR_THROW;
 }
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_ILU_SPLIT_GENERATE_KERNEL);
+    GKO_DECLARE_BATCH_EXACT_ILU_COMPUTE_FACTORIZATION_KERNEL);
 
 
 template <typename ValueType, typename IndexType>
-void apply_split(std::shared_ptr<const DefaultExecutor> exec,
-                 const matrix::BatchCsr<ValueType, IndexType>* const l,
-                 const matrix::BatchCsr<ValueType, IndexType>* const u,
-                 const matrix::BatchDense<ValueType>* const r,
-                 matrix::BatchDense<ValueType>* const z)
+void compute_parilu0_factorization(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const matrix::BatchCsr<ValueType, IndexType>* const sys_mat,
+    matrix::BatchCsr<ValueType, IndexType>* const mat_fact,
+    const int parilu_num_sweeps, const IndexType* const dependencies,
+    const IndexType* const nz_ptrs)
 {
-    const auto num_rows = static_cast<int>(l->get_size().at(0)[0]);
-    const auto nbatch = l->get_num_batch_entries();
-    const auto l_ub = get_batch_struct(l);
-    const auto u_ub = get_batch_struct(u);
-    using d_value_type = cuda_type<ValueType>;
-    using trsv_type = batch_exact_trsv_split<d_value_type>;
-    using prec_type = batch_ilu_split<d_value_type, trsv_type>;
-    prec_type prec(l_ub, u_ub, trsv_type());
-    apply<<<nbatch, default_block_size>>>(prec, nbatch, num_rows,
-                                          as_cuda_type(r->get_const_values()),
-                                          as_cuda_type(z->get_values()));
+    const auto num_rows = static_cast<int>(sys_mat->get_size().at(0)[0]);
+    const auto nbatch = sys_mat->get_num_batch_entries();
+    const auto nnz =
+        static_cast<int>(sys_mat->get_num_stored_elements() / nbatch);
+
+    const int dynamic_shared_mem_bytes = nnz * sizeof(ValueType);
+
+    generate_parilu0_kernel<<<nbatch, default_block_size,
+                              dynamic_shared_mem_bytes>>>(
+        nbatch, num_rows, nnz, dependencies, nz_ptrs, parilu_num_sweeps,
+        as_cuda_type(sys_mat->get_const_values()),
+        as_cuda_type(mat_fact->get_values()));
+
+    GKO_CUDA_LAST_IF_ERROR_THROW;
 }
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_ILU_SPLIT_APPLY_KERNEL);
+    GKO_DECLARE_BATCH_PARILU_COMPUTE_FACTORIZATION_KERNEL);
 
+
+// Only for testing purpose
+template <typename ValueType, typename IndexType>
+void apply_ilu(
+    std::shared_ptr<const DefaultExecutor> exec,
+    const matrix::BatchCsr<ValueType, IndexType>* const factored_matrix,
+    const IndexType* const diag_locs,
+    const matrix::BatchDense<ValueType>* const r,
+    matrix::BatchDense<ValueType>* const z)
+{
+    const auto num_rows =
+        static_cast<int>(factored_matrix->get_size().at(0)[0]);
+    const auto nbatch = factored_matrix->get_num_batch_entries();
+    const auto factored_matrix_batch = get_batch_struct(factored_matrix);
+    using d_value_type = cuda_type<ValueType>;
+    using prec_type = batch_ilu<d_value_type>;
+    prec_type prec(factored_matrix_batch, diag_locs);
+
+    batch_ilu_apply<<<nbatch, default_block_size,
+                      prec_type::dynamic_work_size(num_rows, 0) *
+                          sizeof(ValueType)>>>(
+        prec, nbatch, num_rows, as_cuda_type(r->get_const_values()),
+        as_cuda_type(z->get_values()));
+}
+
+
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
+    GKO_DECLARE_BATCH_ILU_APPLY_KERNEL);
 
 }  // namespace batch_ilu
 }  // namespace cuda

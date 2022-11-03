@@ -30,51 +30,90 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-// only works for ILU(0) for now
 template <typename ValueType>
-inline void generate(const int num_rows,
-                     const int* const __restrict__ a_row_ptrs,
-                     const int* const __restrict__ a_col_idxs,
-                     const ValueType* const __restrict__ a_values,
-                     const int* const __restrict__ l_row_ptrs,
-                     const int* const __restrict__ l_col_idxs,
-                     ValueType* const __restrict__ l_values,
-                     const int* const __restrict__ u_row_ptrs,
-                     const int* const __restrict__ u_col_idxs,
-                     ValueType* const __restrict__ u_values)
+inline void batch_entry_factorize_impl(
+    const int* const diag_locs,
+    const batch_csr::BatchEntry<ValueType>& mat_factorized_entry)
 {
-    int l_nnz = 0;
-    int u_nnz = 0;
-    for (int irow = 0; irow < num_rows; irow++) {
-        for (int jz = a_row_ptrs[irow]; jz < a_row_ptrs[irow + 1]; jz++) {
-            const int col = a_col_idxs[jz];
-            const auto minrowcol = std::min(irow, col);
-            ValueType sum{};
-            for (int kz = l_row_ptrs[irow]; l_col_idxs[kz] < minrowcol; kz++) {
-                const int l_col = l_col_idxs[kz];
-                for (int lz = u_row_ptrs[l_col]; lz < u_row_ptrs[l_col + 1];
-                     lz++) {
-                    if (u_col_idxs[lz] == col) {
-                        sum += l_values[kz] * u_values[lz];
+    const int nrows = mat_factorized_entry.num_rows;
+    const int nnz = mat_factorized_entry.num_nnz;
+    const int* row_ptrs = mat_factorized_entry.row_ptrs;
+    const int* col_idxs = mat_factorized_entry.col_idxs;
+    ValueType* values = mat_factorized_entry.values;
+
+    for (int curr_row_index = 0; curr_row_index < nrows; curr_row_index++) {
+        for (int row_below_index = curr_row_index + 1; row_below_index < nrows;
+             row_below_index++) {
+            ValueType row_ele = zero<ValueType>();
+
+            for (int i = row_ptrs[row_below_index];
+                 i < row_ptrs[row_below_index + 1]; i++) {
+                const int col_index = col_idxs[i];
+
+                if (col_index == curr_row_index) {
+                    ValueType diag_ele = values[diag_locs[curr_row_index]];
+                    assert(diag_ele != zero<ValueType>());
+                    row_ele = values[i] / diag_ele;
+                    values[i] = row_ele;
+                }
+
+                if (col_index > curr_row_index) {
+                    ValueType col_ele = zero<ValueType>();
+                    for (int t = row_ptrs[curr_row_index];
+                         t < row_ptrs[curr_row_index + 1]; t++) {
+                        if (col_idxs[t] == col_index) {
+                            col_ele = values[t];
+                            break;
+                        }
                     }
+
+                    values[i] -= row_ele * col_ele;
                 }
             }
-            if (irow > col) {
-                // lower
-                assert(l_col_idxs[l_nnz] == col);
-                l_values[l_nnz] =
-                    (a_values[jz] - sum) / u_values[u_row_ptrs[col]];
-                l_nnz++;
-            } else {
-                // upper
-                assert(u_col_idxs[u_nnz] == col);
-                u_values[u_nnz] = a_values[jz] - sum;
-                u_nnz++;
-                if (irow == col) {
-                    l_values[l_nnz] = 1.0;
-                    l_nnz++;
-                }
+        }
+    }
+}
+
+
+template <typename ValueType>
+inline void batch_entry_parilu0_factorize_impl(
+    const int parilu_num_sweeps, const int* const dependencies,
+    const int* const nz_ptrs,
+    const batch_csr::BatchEntry<const ValueType>& sys_mat_entry,
+    const batch_csr::BatchEntry<ValueType>& mat_factorized_entry)
+{
+    const int nrows = mat_factorized_entry.num_rows;
+    const int nnz = mat_factorized_entry.num_nnz;
+    const ValueType* const A_vals = sys_mat_entry.values;
+    ValueType* const fact_mat_vals = mat_factorized_entry.values;
+
+    for (int iter = 0; iter < parilu_num_sweeps;
+         iter++)  // just 1 sweep is sufficient as this is eqvt. to exact ilu0
+                  // (with this order of computing elements)
+    {
+        for (int el = 0; el < nnz; el++) {
+            ValueType diag_val{one<ValueType>()};
+
+            const int st = nz_ptrs[el];
+            const int end = nz_ptrs[el + 1] - 1;
+
+            const bool has_diag_dependency =
+                (end + 1 - st) % 2 == 0 ? false : true;
+
+            ValueType sum{zero<ValueType>()};
+
+            for (int idx = st; idx <= end - 1; idx += 2) {
+                sum += fact_mat_vals[dependencies[idx]] *
+                       fact_mat_vals[dependencies[idx + 1]];
             }
+
+            if (has_diag_dependency == true) {
+                diag_val = fact_mat_vals[dependencies[end]];
+            }
+
+            ValueType to_write = (A_vals[el] - sum) / diag_val;
+
+            fact_mat_vals[el] = to_write;
         }
     }
 }

@@ -47,35 +47,39 @@ namespace gko {
 namespace kernels {
 
 
-/**
- * @fn generate
- *
- * This kernel builds an ILU preconditioner for each matrix in
- * the input batch of matrices
- *
- * @param exec  The executor on which to run the kernel.
- * @param a  The batch of matrices for which to build the preconditioner.
- */
-#define GKO_DECLARE_BATCH_ILU_SPLIT_GENERATE_KERNEL(ValueType, IndexType)     \
-    void generate_split(std::shared_ptr<const DefaultExecutor> exec,          \
-                        gko::preconditioner::batch_factorization_type f_type, \
-                        const matrix::BatchCsr<ValueType, IndexType>* a,      \
-                        matrix::BatchCsr<ValueType, IndexType>* l,            \
-                        matrix::BatchCsr<ValueType, IndexType>* u)
+#define GKO_DECLARE_BATCH_EXACT_ILU_COMPUTE_FACTORIZATION_KERNEL(ValueType, \
+                                                                 IndexType) \
+    void compute_ilu0_factorization(                                        \
+        std::shared_ptr<const DefaultExecutor> exec,                        \
+        const IndexType* const diag_locs,                                   \
+        matrix::BatchCsr<ValueType, IndexType>* mat_fact)
 
-#define GKO_DECLARE_BATCH_ILU_SPLIT_APPLY_KERNEL(ValueType, IndexType) \
-    void apply_split(std::shared_ptr<const DefaultExecutor> exec,      \
-                     const matrix::BatchCsr<ValueType, IndexType>* l,  \
-                     const matrix::BatchCsr<ValueType, IndexType>* u,  \
-                     const matrix::BatchDense<ValueType>* r,           \
-                     matrix::BatchDense<ValueType>* z)
+#define GKO_DECLARE_BATCH_PARILU_COMPUTE_FACTORIZATION_KERNEL(ValueType, \
+                                                              IndexType) \
+    void compute_parilu0_factorization(                                  \
+        std::shared_ptr<const DefaultExecutor> exec,                     \
+        const matrix::BatchCsr<ValueType, IndexType>* sys_mat,           \
+        matrix::BatchCsr<ValueType, IndexType>* mat_fact,                \
+        const int parilu_num_sweeps, const IndexType* dependencies,      \
+        const IndexType* nz_ptrs)
+
+#define GKO_DECLARE_BATCH_ILU_APPLY_KERNEL(ValueType, IndexType)            \
+    void apply_ilu(                                                         \
+        std::shared_ptr<const DefaultExecutor> exec,                        \
+        const matrix::BatchCsr<ValueType, IndexType>* factored_matrix,      \
+        const IndexType* diag_locs, const matrix::BatchDense<ValueType>* r, \
+        matrix::BatchDense<ValueType>* z)
 
 
-#define GKO_DECLARE_ALL_AS_TEMPLATES                                   \
-    template <typename ValueType, typename IndexType>                  \
-    GKO_DECLARE_BATCH_ILU_SPLIT_GENERATE_KERNEL(ValueType, IndexType); \
-    template <typename ValueType, typename IndexType>                  \
-    GKO_DECLARE_BATCH_ILU_SPLIT_APPLY_KERNEL(ValueType, IndexType)
+#define GKO_DECLARE_ALL_AS_TEMPLATES                                     \
+    template <typename ValueType, typename IndexType>                    \
+    GKO_DECLARE_BATCH_EXACT_ILU_COMPUTE_FACTORIZATION_KERNEL(ValueType,  \
+                                                             IndexType); \
+    template <typename ValueType, typename IndexType>                    \
+    GKO_DECLARE_BATCH_PARILU_COMPUTE_FACTORIZATION_KERNEL(ValueType,     \
+                                                          IndexType);    \
+    template <typename ValueType, typename IndexType>                    \
+    GKO_DECLARE_BATCH_ILU_APPLY_KERNEL(ValueType, IndexType)
 
 
 GKO_DECLARE_FOR_ALL_EXECUTOR_NAMESPACES(batch_ilu,

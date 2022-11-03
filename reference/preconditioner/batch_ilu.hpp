@@ -44,91 +44,110 @@ namespace host {
 
 
 /**
- * Dummy device factorization to use for those factorizations that are only
- * implemented as separate kernel launches.
+ * Batch ilu0 preconditioner.
  */
-class BatchDummyFactorization {};
-
-
-/**
- * Batch preconditioner based on the application of a matrix factorization.
- *
- * \tparam Trsv  The triangular solve method to use.
- * \tparam Factorization  The matrix factorization method to use. This is
- *   currently unused because device-side factorization is not implemented.
- */
-template <typename ValueType, typename Trsv,
-          typename Factorization = BatchDummyFactorization>
-class batch_ilu_split final {
+template <typename ValueType>
+class batch_ilu final {
 public:
     using value_type = ValueType;
-    using factorization = Factorization;
-    using trsv = Trsv;
 
     /**
-     * Set the factorization and triangular solver to use.
      *
-     * @param l_factor  Lower-triangular factor that was externally generated.
-     * @param u_factor  Upper-triangular factor that was externally generated.
-     * @param trisolve  The triangular solver to use. Currently, it must be
-     *                  pre-generated.
+     * @param mat_factorized   Factorized matrix (that was factored externally).
+     * @param csr_diag_locs  pointers to the diagonal entries in factorized
+     * matrix
      */
-    batch_ilu_split(
-        const gko::batch_csr::UniformBatch<const value_type>& l_factor,
-        const gko::batch_csr::UniformBatch<const value_type>& u_factor,
-        const trsv& trisolve, const factorization& factors = factorization{})
-        : l_factor_{l_factor}, u_factor_{u_factor}, trsv_{trisolve}
+    batch_ilu(
+        const gko::batch_csr::UniformBatch<const value_type>& mat_factorized,
+        const int* const csr_diag_locs)
+        : mat_factorized_batch_{mat_factorized}, csr_diag_locs_{csr_diag_locs}
     {}
 
     /**
-     * The size of the work vector required per batch entry.
+     * The size of the work vector required per batch entry. (takes into account
+     * both- generation and application)
      */
-    static constexpr int dynamic_work_size(int, int) { return 0; }
+    static constexpr int dynamic_work_size(int nrows, int nnz) { return nrows; }
 
-    // __host__ __device__ static constexpr int dynamic_work_size(
-    //     const int num_rows, const int nnz)
-    // {
-    //     return factorization::dynamic_work_size(num_rows, nnz)
-    //         + trsv::dynamic_work_size(num_rows, nnz);
-    //     // If generation of trsv can be done in-place, just use max.
-    //     // return max(factorization::dynamic_work_size(num_rows, nnz),
-    //     //     trsv::dynamic_work_size(num_rows, nnz));
-    // }
 
     /**
-     * Generates the preconditioner by calling the device factorization.
+     * Complete the precond generation process.
      *
-     * @param mat  Matrix for which to build an ILU-type preconditioner.
      */
     void generate(size_type batch_id,
                   const gko::batch_csr::BatchEntry<const ValueType>&,
-                  ValueType*)
+                  ValueType* const work)
     {
-        auto batch_L = gko::batch::batch_entry(l_factor_, batch_id);
-        auto batch_U = gko::batch::batch_entry(u_factor_, batch_id);
-        trsv_.generate(batch_L, batch_U);
+        mat_factorized_entry_ =
+            gko::batch::batch_entry(mat_factorized_batch_, batch_id);
+        work_ = work;
     }
 
     void generate(size_type batch_id,
                   const gko::batch_ell::BatchEntry<const ValueType>&,
-                  ValueType*)
-    {}
+                  ValueType* const work)
+    {
+        mat_factorized_entry_ =
+            gko::batch::batch_entry(mat_factorized_batch_, batch_id);
+        work_ = work;
+    }
 
     void generate(size_type batch_id,
                   const gko::batch_dense::BatchEntry<const ValueType>&,
-                  ValueType*)
-    {}
+                  ValueType* const work)
+    {
+        mat_factorized_entry_ =
+            gko::batch::batch_entry(mat_factorized_batch_, batch_id);
+        work_ = work;
+    }
+
 
     void apply(const gko::batch_dense::BatchEntry<const ValueType>& r,
                const gko::batch_dense::BatchEntry<ValueType>& z) const
     {
-        trsv_.apply(r, z);
+        // special trsv for the combined form
+        /*
+            z = prec * r
+            L * U * z = r
+            L * y = r (find y by lower trsv), then U * z = y (find z by upper
+           trsv)
+        */
+        const auto nrows = mat_factorized_entry_.num_rows;
+        const auto row_ptrs = mat_factorized_entry_.row_ptrs;
+        const auto col_idxs = mat_factorized_entry_.col_idxs;
+        const auto values = mat_factorized_entry_.values;
+
+        // Lower Trsv  L * work = r
+        for (int row_idx = 0; row_idx < nrows; row_idx++) {
+            ValueType sum = zero<ValueType>();
+            for (int i = row_ptrs[row_idx]; i < csr_diag_locs_[row_idx]; i++) {
+                const int col_idx = col_idxs[i];
+                sum += values[i] * work_[col_idx];
+            }
+
+            work_[row_idx] = (r.values[row_idx] - sum) / one<ValueType>();
+        }
+
+        // Upper Trsv U * z = work
+        for (int row_idx = nrows - 1; row_idx >= 0; row_idx--) {
+            ValueType sum = zero<ValueType>();
+
+            for (int i = row_ptrs[row_idx + 1] - 1; i > csr_diag_locs_[row_idx];
+                 i--) {
+                const int col_idx = col_idxs[i];
+                sum += values[i] * z.values[col_idx];
+            }
+
+            ValueType diag_ele = values[csr_diag_locs_[row_idx]];
+            z.values[row_idx] = (work_[row_idx] - sum) / diag_ele;
+        }
     }
 
 private:
-    gko::batch_csr::UniformBatch<const value_type> l_factor_;
-    gko::batch_csr::UniformBatch<const value_type> u_factor_;
-    trsv trsv_;
+    const gko::batch_csr::UniformBatch<const value_type> mat_factorized_batch_;
+    const int* const csr_diag_locs_;
+    gko::batch_csr::BatchEntry<const value_type> mat_factorized_entry_;
+    value_type* work_;
 };
 
 

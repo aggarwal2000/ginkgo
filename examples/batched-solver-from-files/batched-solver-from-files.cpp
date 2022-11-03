@@ -161,14 +161,23 @@ int main(int argc, char* argv[])
     x->copy_from(host_x.get());
 
     // @sect3{Create the batch solver factory}
-    const real_type reduction_factor{1e-6};
+    const real_type reduction_factor{1e-08};
     // Create a batched solver factory with relevant parameters.
     auto solver_gen =
         solver_type::build()
             .with_default_max_iterations(500)
             .with_default_residual_tol(reduction_factor)
             .with_tolerance_type(gko::stop::batch::ToleranceType::relative)
-            // .with_preconditioner(gko::preconditioner::batch::type::jacobi)
+            .with_preconditioner(
+                gko::preconditioner::BatchIlu<value_type, index_type>::build()
+                    .with_skip_sorting(true)
+                    // .with_ilu_type(
+                    //     gko::preconditioner::batch_ilu_type::exact_ilu)
+                    .with_ilu_type(gko::preconditioner::batch_ilu_type::parilu)
+                    .with_parilu_num_sweeps(10)
+                    .on(exec))
+            // .with_preconditioner(gko::preconditioner::BatchJacobi<value_type,
+            // index_type>::build().on(exec))
             .on(exec);
 
     // @sect3{Batch logger}

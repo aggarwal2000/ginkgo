@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "core/matrix/batch_struct.hpp"
 #include "hip/components/cooperative_groups.hip.hpp"
+#include "hip/components/load_store.hip.hpp"
 #include "hip/components/reduction.hip.hpp"
 
 
@@ -47,7 +48,6 @@ namespace hip {
 #include "common/cuda_hip/preconditioner/batch_identity.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_ilu.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_jacobi.hpp.inc"
-#include "common/cuda_hip/preconditioner/batch_trsv.hpp.inc"
 
 
 }  // namespace hip

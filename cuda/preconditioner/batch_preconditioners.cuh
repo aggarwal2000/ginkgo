@@ -36,8 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "core/matrix/batch_struct.hpp"
 #include "cuda/components/cooperative_groups.cuh"
+#include "cuda/components/load_store.cuh"
 #include "cuda/components/reduction.cuh"
-
 
 namespace gko {
 namespace kernels {
@@ -47,7 +47,6 @@ namespace cuda {
 #include "common/cuda_hip/preconditioner/batch_identity.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_ilu.hpp.inc"
 #include "common/cuda_hip/preconditioner/batch_jacobi.hpp.inc"
-#include "common/cuda_hip/preconditioner/batch_trsv.hpp.inc"
 
 
 }  // namespace cuda

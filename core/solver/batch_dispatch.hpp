@@ -104,7 +104,6 @@ using DeviceValueType = ValueType;
 #include "reference/preconditioner/batch_identity.hpp"
 #include "reference/preconditioner/batch_ilu.hpp"
 #include "reference/preconditioner/batch_jacobi.hpp"
-#include "reference/preconditioner/batch_trsv.hpp"
 #include "reference/stop/batch_criteria.hpp"
 
 namespace gko {
@@ -208,26 +207,6 @@ public:
                 logger, amat, device::BatchJacobi<device_value_type>(), b_b,
                 x_b);
         } else if (auto prec = dynamic_cast<
-                       const preconditioner::BatchIlu<value_type>*>(precon_)) {
-            auto l_factor =
-                device::get_batch_struct(prec->get_const_lower_factor());
-            auto u_factor =
-                device::get_batch_struct(prec->get_const_upper_factor());
-            if (prec->get_parameters().trsv_type ==
-                gko::preconditioner::batch_trsv_type::exact) {
-                using trsv_type =
-                    device::batch_exact_trsv_split<device_value_type>;
-                // assuming split factors, or we need one more branch here
-                using ilu_type =
-                    device::batch_ilu_split<device_value_type, trsv_type>;
-                dispatch_on_stop(logger, amat,
-                                 ilu_type{l_factor, u_factor, trsv_type()}, b_b,
-                                 x_b);
-            } else {
-                // TODO: Implement other batch TRSV types
-                GKO_NOT_IMPLEMENTED;
-            }
-        } else if (auto prec = dynamic_cast<
                        const preconditioner::BatchIsai<value_type>*>(precon_)) {
             auto approx_inv =
                 device::get_batch_struct(prec->get_const_approximate_inverse());
@@ -235,6 +214,17 @@ public:
             //  like cuda/preconditioner/batch_preconditioners.cuh, and add a
             //  dispatch.
             GKO_NOT_IMPLEMENTED;
+        } else if (auto prec = dynamic_cast<
+                       const preconditioner::BatchIlu<value_type>*>(precon_)) {
+            const auto factorized_mat =
+                device::get_batch_struct(prec->get_const_factorized_matrix());
+            const auto diag_locs = prec->get_const_diag_locations();
+
+            dispatch_on_stop(
+                logger, amat,
+                device::batch_ilu<device_value_type>(factorized_mat, diag_locs),
+                b_b, x_b);
+
         } else {
             GKO_NOT_IMPLEMENTED;
         }

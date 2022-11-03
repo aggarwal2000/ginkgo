@@ -47,31 +47,14 @@ namespace gko {
 namespace preconditioner {
 
 
-/**
- * Method to use for triangular solves.
- */
-enum class batch_trsv_type { exact, isai };
-
-
-/**
- * Method to use for factorization of the system matrix in a given sparsity
- * pattern.
- */
-enum class batch_factorization_type { exact, par_ilu };
-
-
-/**
- * Type of storage of the triangular factors - two separate batch sparse
- * matrices or one combined batch sparse matrix.
- */
-enum class batch_factors_storage { split, combined };
-
+enum class batch_ilu_type { parilu, exact_ilu };
 
 /**
  * A batch of incomplete LU factor preconditioners for a batch of matrices.
  *
- * Currently, this always computes ILU(0) preconditioners, either exactly or
- * approximately.
+ * Currently, this always computes ILU(0) preconditioners
+ *
+ * Note: Batched Preconditioners do not support user facing apply.
  *
  * @tparam ValueType  precision of matrix elements
  *
@@ -95,41 +78,64 @@ public:
     GKO_CREATE_FACTORY_PARAMETERS(parameters, Factory)
     {
         /**
-         * Type of triangular solver to use.
-         */
-        batch_trsv_type GKO_FACTORY_PARAMETER_SCALAR(trsv_type,
-                                                     batch_trsv_type::exact);
-
-        /**
-         * Factorization algorithm to use.
-         */
-        batch_factorization_type GKO_FACTORY_PARAMETER_SCALAR(
-            factorization_type, batch_factorization_type::exact);
-
-        /**
-         * How the factors are stored.
+         * @brief Optimization parameter that skips the sorting of the input
+         *        matrix (only skip if it is known that it is already sorted).
          *
-         * Two separate matrices for L and U (split) or one combined matrix
-         * with implied unit diagonal (combined).
+         * The algorithm to generate exact ilu0 requires the
+         * input matrix to be sorted. If it is, this parameter can be set to
+         * `true` to skip the sorting for better performance.
          */
-        batch_factors_storage GKO_FACTORY_PARAMETER_SCALAR(
-            storage_type, batch_factors_storage::split);
+        bool GKO_FACTORY_PARAMETER_SCALAR(skip_sorting, false);
+
+        /**
+         * @brief Number of sweeps for parilu0
+         *
+         * This parameter is used only in case of parilu0 preconditioner.
+         */
+        int GKO_FACTORY_PARAMETER_SCALAR(parilu_num_sweeps, 10);
+
+        /**
+         * @brief batch_ilu_type
+         *
+         */
+        batch_ilu_type GKO_FACTORY_PARAMETER_SCALAR(ilu_type,
+                                                    batch_ilu_type::exact_ilu);
     };
     GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchIlu, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
 
-    std::unique_ptr<BatchLinOp> transpose() const override;
 
-    std::unique_ptr<BatchLinOp> conj_transpose() const override;
-
-    const matrix::BatchCsr<ValueType, IndexType>* get_const_lower_factor() const
+    std::unique_ptr<BatchLinOp> transpose() const override
     {
-        return l_factor_.get();
+        return build()
+            .with_skip_sorting(this->parameters_.skip_sorting)
+            .with_ilu_type(this->parameters_.ilu_type)
+            .with_parilu_num_sweeps(this->parameters_.parilu_num_sweeps)
+            .on(this->get_executor())
+            ->generate(share(
+                as<BatchTransposable>(this->system_matrix_)->transpose()));
     }
 
-    const matrix::BatchCsr<ValueType, IndexType>* get_const_upper_factor() const
+    std::unique_ptr<BatchLinOp> conj_transpose() const override
     {
-        return u_factor_.get();
+        return build()
+            .with_skip_sorting(this->parameters_.skip_sorting)
+            .with_ilu_type(this->parameters_.ilu_type)
+            .with_parilu_num_sweeps(this->parameters_.parilu_num_sweeps)
+            .on(this->get_executor())
+            ->generate(share(
+                as<BatchTransposable>(this->system_matrix_)->conj_transpose()));
+    }
+
+    const matrix::BatchCsr<ValueType, IndexType>* get_const_factorized_matrix()
+        const
+    {
+        return mat_factored_.get();
+    }
+
+    const IndexType* get_const_diag_locations() const
+    {
+        return diag_locations_.get_const_data();
     }
 
 protected:
@@ -153,9 +159,11 @@ protected:
                       std::shared_ptr<const BatchLinOp> system_matrix)
         : EnableBatchLinOp<BatchIlu>(factory->get_executor(),
                                      gko::transpose(system_matrix->get_size())),
-          parameters_{factory->get_parameters()}
+          parameters_{factory->get_parameters()},
+          system_matrix_{system_matrix}
     {
-        this->generate(lend(system_matrix));
+        GKO_ASSERT_BATCH_HAS_SQUARE_MATRICES(system_matrix);
+        this->generate_precond(lend(system_matrix));
     }
 
     /**
@@ -164,16 +172,29 @@ protected:
      * @param system_matrix  the source matrix used to generate the
      *                       preconditioner
      */
-    void generate(const BatchLinOp* system_matrix);
+    void generate_precond(const BatchLinOp* system_matrix);
 
-    void apply_impl(const BatchLinOp* b, BatchLinOp* x) const override{};
+    // Since there is no guarantee that the complete generation of the
+    // preconditioner would occur outside the solver kernel, that is in the
+    // external generate step, there is no logic in implementing "apply" for
+    // batched preconditioners
+    void apply_impl(const BatchLinOp* b, BatchLinOp* x) const override
+        GKO_BATCHED_NOT_SUPPORTED(
+            "batched preconditioners do not support (user facing/public) "
+            "apply");
+
 
     void apply_impl(const BatchLinOp* alpha, const BatchLinOp* b,
-                    const BatchLinOp* beta, BatchLinOp* x) const override{};
+                    const BatchLinOp* beta, BatchLinOp* x) const override
+        GKO_BATCHED_NOT_SUPPORTED(
+            "batched preconditioners do not support (user facing/public) "
+            "apply");
+
 
 private:
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> l_factor_;
-    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> u_factor_;
+    std::shared_ptr<const BatchLinOp> system_matrix_;
+    std::shared_ptr<matrix::BatchCsr<ValueType, IndexType>> mat_factored_;
+    array<IndexType> diag_locations_;
 };
 
 

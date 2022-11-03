@@ -30,56 +30,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************<GINKGO LICENSE>*******************************/
 
-#include "core/preconditioner/batch_ilu_kernels.hpp"
-
-
-#include <ginkgo/core/matrix/batch_csr.hpp>
-
-
-#include "core/matrix/batch_struct.hpp"
+#ifndef GKO_CUDA_COMPONENTS_LOAD_STORE_CUH_
+#define GKO_CUDA_COMPONENTS_LOAD_STORE_CUH_
 
 
 namespace gko {
 namespace kernels {
-namespace dpcpp {
-namespace batch_ilu {
+namespace cuda {
 
+#include "common/cuda_hip/components/load_store.hpp.inc"
 
-template <typename ValueType, typename IndexType>
-void compute_ilu0_factorization(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const IndexType* const diag_locs,
-    matrix::BatchCsr<ValueType, IndexType>* const mat_fact) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_EXACT_ILU_COMPUTE_FACTORIZATION_KERNEL);
-
-
-template <typename ValueType, typename IndexType>
-void compute_parilu0_factorization(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const sys_mat,
-    matrix::BatchCsr<ValueType, IndexType>* const mat_fact,
-    const int parilu_num_sweeps, const IndexType* const dependencies,
-    const IndexType* const nz_ptrs) GKO_NOT_IMPLEMENTED;
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_PARILU_COMPUTE_FACTORIZATION_KERNEL);
-
-
-template <typename ValueType, typename IndexType>
-void apply_ilu(
-    std::shared_ptr<const DefaultExecutor> exec,
-    const matrix::BatchCsr<ValueType, IndexType>* const factored_matrix,
-    const IndexType* const diag_locs,
-    const matrix::BatchDense<ValueType>* const r,
-    matrix::BatchDense<ValueType>* const z) GKO_NOT_IMPLEMENTED;
-
-
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE_AND_INT32_INDEX(
-    GKO_DECLARE_BATCH_ILU_APPLY_KERNEL);
-
-}  // namespace batch_ilu
-}  // namespace dpcpp
+}  // namespace cuda
 }  // namespace kernels
 }  // namespace gko
+
+
+#endif  // GKO_CUDA_COMPONENTS_LOAD_STORE_CUH_

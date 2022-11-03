@@ -53,6 +53,8 @@ namespace preconditioner {
  * A batch-Jacobi preconditioner is a diagonal batch linear operator, obtained
  * by inverting the diagonals, of the source batch operator.
  *
+ * Note: Batched Preconditioners do not support user facing apply.
+ *
  * @tparam ValueType  precision of matrix elements
  *
  * @ingroup jacobi
@@ -74,6 +76,7 @@ public:
     GKO_CREATE_FACTORY_PARAMETERS(parameters, Factory){};
     GKO_ENABLE_BATCH_LIN_OP_FACTORY(BatchJacobi, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
+
 
     std::unique_ptr<BatchLinOp> transpose() const override
     {
@@ -123,10 +126,18 @@ protected:
      */
     void generate(const BatchLinOp* system_matrix) {}
 
-    void apply_impl(const BatchLinOp* b, BatchLinOp* x) const override{};
+    // Since there is no guarantee that the complete generation of the
+    // preconditioner would occur outside the solver kernel, that is in the
+    // external generate step, there is no logic of implementing "apply" for
+    // batched preconditioners
+    void apply_impl(const BatchLinOp* b, BatchLinOp* x) const override
+        GKO_BATCHED_NOT_SUPPORTED(
+            "batched preconditioners do not support apply");
 
     void apply_impl(const BatchLinOp* alpha, const BatchLinOp* b,
-                    const BatchLinOp* beta, BatchLinOp* x) const override{};
+                    const BatchLinOp* beta, BatchLinOp* x) const override
+        GKO_BATCHED_NOT_SUPPORTED(
+            "batched preconditioners do not support apply");
 };
 
 
