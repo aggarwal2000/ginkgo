@@ -43,6 +43,7 @@ target_sources(ginkgo_omp
     solver/batch_direct_kernels.cpp
     solver/batch_gmres_kernels.cpp
     solver/batch_idr_kernels.cpp
+    solver/batch_lower_trs_kernels.cpp
     solver/batch_richardson_kernels.cpp
     solver/cb_gmres_kernels.cpp
     solver/gmres_kernels.cpp
