@@ -259,12 +259,14 @@ TEST_F(BatchIsai, GeneralIsaiGenerateIsEquivalentToReferenceSpy2)
 //         this->general_mtx_big);
 // }
 
+
 TEST_F(BatchIsai, GeneralIsaiGenerateIsEquivalentToReferenceSpy3)
 {
     this->test_generate_eqvt_to_ref(
         gko::preconditioner::batch_isai_input_matrix_type::general, 3,
         this->general_mtx_small);
 }
+
 
 // TEST_F(BatchIsai, ExtendedGeneralIsaiGenerateIsEquivalentToReferenceSpy3)
 // {
@@ -274,13 +276,13 @@ TEST_F(BatchIsai, GeneralIsaiGenerateIsEquivalentToReferenceSpy3)
 // }
 
 
-
 TEST_F(BatchIsai, LowerIsaiGenerateIsEquivalentToReferenceSpy1)
 {
     this->test_generate_eqvt_to_ref(
         gko::preconditioner::batch_isai_input_matrix_type::lower_tri, 1,
         this->lower_tri_mtx_small);
 }
+
 
 TEST_F(BatchIsai, ExtendedLowerIsaiGenerateIsEquivalentToReferenceSpy1)
 {
@@ -297,6 +299,7 @@ TEST_F(BatchIsai, LowerIsaiGenerateIsEquivalentToReferenceSpy2)
         this->lower_tri_mtx_small);
 }
 
+
 TEST_F(BatchIsai, ExtendedLowerIsaiGenerateIsEquivalentToReferenceSpy2)
 {
     this->test_generate_eqvt_to_ref(
@@ -304,12 +307,14 @@ TEST_F(BatchIsai, ExtendedLowerIsaiGenerateIsEquivalentToReferenceSpy2)
         this->lower_tri_mtx_big);
 }
 
+
 TEST_F(BatchIsai, LowerIsaiGenerateIsEquivalentToReferenceSpy3)
 {
     this->test_generate_eqvt_to_ref(
         gko::preconditioner::batch_isai_input_matrix_type::lower_tri, 3,
         this->lower_tri_mtx_small);
 }
+
 
 TEST_F(BatchIsai, ExtendedLowerIsaiGenerateIsEquivalentToReferenceSpy3)
 {
@@ -326,6 +331,7 @@ TEST_F(BatchIsai, UpperIsaiGenerateIsEquivalentToReferenceSpy1)
         this->upper_tri_mtx_small);
 }
 
+
 TEST_F(BatchIsai, ExtendedUpperIsaiGenerateIsEquivalentToReferenceSpy1)
 {
     this->test_generate_eqvt_to_ref(
@@ -341,6 +347,7 @@ TEST_F(BatchIsai, UpperIsaiGenerateIsEquivalentToReferenceSpy2)
         this->upper_tri_mtx_small);
 }
 
+
 TEST_F(BatchIsai, ExtendedUpperIsaiGenerateIsEquivalentToReferenceSpy2)
 {
     this->test_generate_eqvt_to_ref(
@@ -355,6 +362,7 @@ TEST_F(BatchIsai, UpperIsaiGenerateIsEquivalentToReferenceSpy3)
         gko::preconditioner::batch_isai_input_matrix_type::upper_tri, 3,
         this->upper_tri_mtx_small);
 }
+
 
 TEST_F(BatchIsai, ExtendedUpperIsaiGenerateIsEquivalentToReferenceSpy3)
 {
@@ -379,6 +387,7 @@ TEST_F(BatchIsai, GeneralIsaiApplyIsEquivalentToReferenceSpy1)
 //         this->general_mtx_big,this->r_big, this->z_big);
 // }
 
+
 TEST_F(BatchIsai, GeneralIsaiApplyIsEquivalentToReferenceSpy2)
 {
     this->test_apply_eqvt_to_ref(
@@ -393,6 +402,7 @@ TEST_F(BatchIsai, GeneralIsaiApplyIsEquivalentToReferenceSpy2)
 //         gko::preconditioner::batch_isai_input_matrix_type::general, 2,
 //         this->general_mtx_big,this->r_big, this->z_big);
 // }
+
 
 TEST_F(BatchIsai, GeneralIsaiApplyIsEquivalentToReferenceSpy3)
 {
@@ -458,13 +468,13 @@ TEST_F(BatchIsai, ExtendedLowerIsaiApplyIsEquivalentToReferenceSpy3)
 }
 
 
-
 TEST_F(BatchIsai, UpperIsaiApplyIsEquivalentToReferenceSpy1)
 {
     this->test_apply_eqvt_to_ref(
         gko::preconditioner::batch_isai_input_matrix_type::upper_tri, 1,
         this->upper_tri_mtx_small, this->r_small, this->z_small);
 }
+
 
 TEST_F(BatchIsai, ExtendedUpperIsaiApplyIsEquivalentToReferenceSpy1)
 {
@@ -481,6 +491,7 @@ TEST_F(BatchIsai, UpperIsaiApplyIsEquivalentToReferenceSpy2)
         this->upper_tri_mtx_small, this->r_small, this->z_small);
 }
 
+
 TEST_F(BatchIsai, ExtendedUpperIsaiApplyIsEquivalentToReferenceSpy2)
 {
     this->test_apply_eqvt_to_ref(
@@ -489,13 +500,13 @@ TEST_F(BatchIsai, ExtendedUpperIsaiApplyIsEquivalentToReferenceSpy2)
 }
 
 
-
 TEST_F(BatchIsai, UpperIsaiApplyIsEquivalentToReferenceSpy3)
 {
     this->test_apply_eqvt_to_ref(
         gko::preconditioner::batch_isai_input_matrix_type::upper_tri, 3,
         this->upper_tri_mtx_small, this->r_small, this->z_small);
 }
+
 
 TEST_F(BatchIsai, ExtendedUpperIsaiApplyIsEquivalentToReferenceSpy3)
 {
