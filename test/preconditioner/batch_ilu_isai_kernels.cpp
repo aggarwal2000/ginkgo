@@ -120,7 +120,7 @@ protected:
         const auto d_lower_factor_isai = d_prec->get_const_lower_factor_isai();
         const auto upper_factor_isai = prec->get_const_upper_factor_isai();
         const auto d_upper_factor_isai = d_prec->get_const_upper_factor_isai();
-        const auto tol =  test_isai_extension == true ? 1e+7 * r<value_type>::value : 5000 * r<value_type>::value;
+        const auto tol =  test_isai_extension == true ? 1e+6 * r<value_type>::value : 5000 * r<value_type>::value;
         GKO_ASSERT_BATCH_MTX_NEAR(lower_factor_isai, d_lower_factor_isai, tol);
         GKO_ASSERT_BATCH_MTX_NEAR(upper_factor_isai, d_upper_factor_isai, tol);
     }
@@ -200,7 +200,7 @@ protected:
             d_prec->get_apply_type(), prec->get_num_relaxation_steps(),
             d_rv.get(), d_z.get());
 
-        const auto tol =  test_isai_extension == true ? 1e+7 * r<value_type>::value : 5000 * r<value_type>::value;
+        const auto tol =  test_isai_extension == true ? 1e+6 * r<value_type>::value : 5000 * r<value_type>::value;
         GKO_ASSERT_BATCH_MTX_NEAR(z, d_z, tol);
     }
 };
@@ -219,19 +219,6 @@ TEST_F(BatchIluIsai, IluIsaiGenerateIsEquivalentToReference)
 }
 
 
-TEST_F(BatchIluIsai, IluExtendedIsaiGenerateIsEquivalentToReference)
-{
-    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::exact_ilu,
-                              30, 1, 3, true);
-    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::exact_ilu,
-                              30, 2, 2, true);
-    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::parilu, 70,
-                              1, 3, true);
-    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::parilu, 70,
-                              2, 2, true);
-}
-
-
 TEST_F(BatchIluIsai, IluIsaiSpmvSimpleApplyIsEquivalentToReference)
 {
     const auto apply_type =
@@ -246,23 +233,6 @@ TEST_F(BatchIluIsai, IluIsaiSpmvSimpleApplyIsEquivalentToReference)
         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 1, 3);
     test_apply_eqvt_to_ref(
         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 2, 2);
-}
-
-
-TEST_F(BatchIluIsai, IluExtendedIsaiSpmvSimpleApplyIsEquivalentToReference)
-{
-    const auto apply_type =
-        gko::preconditioner::batch_ilu_isai_apply::spmv_isai_simple;
-    test_apply_eqvt_to_ref(apply_type, 2,
-                           gko::preconditioner::batch_ilu_type::exact_ilu, 30,
-                           1, 3, true);
-    test_apply_eqvt_to_ref(apply_type, 2,
-                           gko::preconditioner::batch_ilu_type::exact_ilu, 30,
-                           2, 2, true);
-    test_apply_eqvt_to_ref(
-        apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 70, 1, 3, true);
-    test_apply_eqvt_to_ref(
-        apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 70, 2, 2, true);
 }
 
 
@@ -286,26 +256,6 @@ TEST_F(BatchIluIsai, IluExtendedIsaiSpmvSimpleApplyIsEquivalentToReference)
 // }
 
 
-// TODO: Implement batch_csr spgemm
-// TEST_F(BatchIluIsai, IluExtendedIsaiSpmvWithSpgemmApplyIsEquivalentToReference)
-// {
-//     const auto apply_type =
-//         gko::preconditioner::batch_ilu_isai_apply::spmv_isai_with_spgemm;
-//     test_apply_eqvt_to_ref(apply_type, 2,
-//                            gko::preconditioner::batch_ilu_type::exact_ilu,
-//                            30, 1, 3, true);
-//     test_apply_eqvt_to_ref(apply_type, 2,
-//                            gko::preconditioner::batch_ilu_type::exact_ilu,
-//                            30, 2, 2, true);
-//     test_apply_eqvt_to_ref(
-//         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 1,
-//         3, true);
-//     test_apply_eqvt_to_ref(
-//         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 2,
-//         2, true);
-// }
-
-
 TEST_F(BatchIluIsai, IluIsaiRelaxtionStepsSimpleApplyIsEquivalentToReference)
 {
     const auto apply_type =
@@ -320,23 +270,6 @@ TEST_F(BatchIluIsai, IluIsaiRelaxtionStepsSimpleApplyIsEquivalentToReference)
         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 1, 3);
     test_apply_eqvt_to_ref(
         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 2, 2);
-}
-
-
-TEST_F(BatchIluIsai, IluExtendedIsaiRelaxtionStepsSimpleApplyIsEquivalentToReference)
-{
-    const auto apply_type =
-        gko::preconditioner::batch_ilu_isai_apply::relaxation_steps_isai_simple;
-    test_apply_eqvt_to_ref(apply_type, 2,
-                           gko::preconditioner::batch_ilu_type::exact_ilu, 30,
-                           1, 3, true);
-    test_apply_eqvt_to_ref(apply_type, 2,
-                           gko::preconditioner::batch_ilu_type::exact_ilu, 30,
-                           2, 2, true);
-    test_apply_eqvt_to_ref(
-        apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 70, 1, 3, true);
-    test_apply_eqvt_to_ref(
-        apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 70, 2, 2, true);
 }
 
 
@@ -360,25 +293,35 @@ TEST_F(BatchIluIsai, IluExtendedIsaiRelaxtionStepsSimpleApplyIsEquivalentToRefer
 //         2);
 // }
 
-// TODO: Implement batch_csr spgemm
-// TEST_F(BatchIluIsai,
-//        IluExtendedIsaiRelaxtionStepsWithSpgemmApplyIsEquivalentToReference)
-// {
-//     const auto apply_type = gko::preconditioner::batch_ilu_isai_apply::
-//         relaxation_steps_isai_with_spgemm;
-//     test_apply_eqvt_to_ref(apply_type, 2,
-//                            gko::preconditioner::batch_ilu_type::exact_ilu,
-//                            30, 1, 3, true);
-//     test_apply_eqvt_to_ref(apply_type, 2,
-//                            gko::preconditioner::batch_ilu_type::exact_ilu,
-//                            30, 2, 2, true);
-//     test_apply_eqvt_to_ref(
-//         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 1,
-//         3, true);
-//     test_apply_eqvt_to_ref(
-//         apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 30, 2,
-//         2, true);
-// }
+
+TEST_F(BatchIluIsai, IluExtendedIsaiGenerateIsEquivalentToReference)
+{
+    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::exact_ilu,
+                              30, 1, 3, true);
+    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::exact_ilu,
+                              30, 2, 2, true);
+    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::parilu, 70,
+                              1, 3, true);
+    test_generate_eqvt_to_ref(gko::preconditioner::batch_ilu_type::parilu, 70,
+                              2, 2, true);
+}
+
+
+TEST_F(BatchIluIsai, IluExtendedIsaiApplyIsEquivalentToReference)
+{
+    const auto apply_type =
+        gko::preconditioner::batch_ilu_isai_apply::spmv_isai_simple;
+    test_apply_eqvt_to_ref(apply_type, 2,
+                           gko::preconditioner::batch_ilu_type::exact_ilu, 30,
+                           1, 3, true);
+    test_apply_eqvt_to_ref(apply_type, 2,
+                           gko::preconditioner::batch_ilu_type::exact_ilu, 30,
+                           2, 2, true);
+    test_apply_eqvt_to_ref(
+        apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 70, 1, 3, true);
+    test_apply_eqvt_to_ref(
+        apply_type, 2, gko::preconditioner::batch_ilu_type::parilu, 70, 2, 2, true);
+}
 
 
 }  // namespace
