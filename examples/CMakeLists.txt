@@ -5,6 +5,7 @@ set(EXAMPLES_EXEC_LIST
     adaptiveprecision-blockjacobi
     batched-solver
     batched-solver-from-files
+    batched-tridiagonal-solver
     cb-gmres
     custom-logger
     ginkgo-ranges
