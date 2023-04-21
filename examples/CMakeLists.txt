@@ -6,6 +6,7 @@ set(EXAMPLES_EXEC_LIST
     batched-solver
     batched-solver-from-files
     batched-tridiagonal-solver
+    batched-band-solver
     cb-gmres
     custom-logger
     ginkgo-ranges
